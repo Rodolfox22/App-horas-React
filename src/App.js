@@ -538,72 +538,73 @@ export default function TaskTrackingApp() {
   }
 
   // Vista principal de la aplicación
-  return (
-    <div className="flex flex-col min-h-screen bg-gray-100">
-      <header className="bg-white shadow-sm p-4">
-        <div className="container mx-auto flex justify-between items-center">
-          <h1 className="text-2xl font-bold">
-            <span className="text-red-600">JLC</span>{" "}
-            <span className="text-blue-600">Montajes Industriales</span>
-          </h1>
-          <div className="text-gray-600">Bienvenido, {userName}</div>
-        </div>
-      </header>
+return (
+  <div className="flex flex-col min-h-screen bg-gray-100">
+    <header className="bg-white shadow-sm p-4">
+      <div className="container mx-auto flex justify-between items-center">
+        <h1 className="text-2xl font-bold">
+          <span className="text-red-600">JLC</span>{" "}
+          <span className="text-blue-600">Montajes Industriales</span>
+        </h1>
+        <div className="text-gray-600">Bienvenido, {userName}</div>
+      </div>
+    </header>
 
-      <main className="flex-grow container mx-auto p-4">
-        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-semibold">Registro de Tareas</h2>
-            <div className="flex space-x-2">
-              <button
-                onClick={() => fileInputRef.current.click()}
-                className="flex items-center px-3 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
-              >
-                <FileUp size={18} className="mr-1" /> Abrir Archivo
-              </button>
-              <input
-                type="file"
-                ref={fileInputRef}
-                onChange={handleFileUpload}
-                accept=".json"
-                className="hidden"
-              />
-              <button
-                onClick={exportToJson}
-                className="flex items-center px-3 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
-              >
-                <FileUp size={18} className="mr-1" /> Guardar Archivo
-              </button>
-            </div>
+    <main className="flex-grow container mx-auto p-4">
+      <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-semibold">Registro de Tareas</h2>
+          <div className="flex space-x-2">
+            <button
+              onClick={() => fileInputRef.current.click()}
+              className="flex items-center px-3 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
+            >
+              <FileUp size={18} className="mr-1" /> Abrir Archivo
+            </button>
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileUpload}
+              accept=".json"
+              className="hidden"
+            />
+            <button
+              onClick={exportToJson}
+              className="flex items-center px-3 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
+            >
+              <FileUp size={18} className="mr-1" /> Guardar Archivo
+            </button>
           </div>
+        </div>
 
-          {/* Tabla de tareas con grupos por fecha */}
-          <div className="overflow-x-auto mb-6">
-            <table className="min-w-full border-collapse">
-              <thead>
-                <tr className="bg-gray-50">
-                  <th className="border px-4 py-2 text-left">Fecha</th>
-                  <th className="border px-4 py-2 text-left">Hs</th>
-                  <th className="border px-4 py-2 text-left">Descripción</th>
-                  <th className="border px-4 py-2 text-center">Acciones</th>
-                </tr>
-              </thead>
-              
-              <tbody>
-                {taskGroups.map((group, groupIndex) => (
-                  <tr
-                    key={group.id}
-                    draggable
-                    onDragStart={(e) => handleGroupDragStart(e, groupIndex)}
-                    onDragOver={(e) => handleGroupDragOver(e, groupIndex)}
-                    onDragEnter={(e) => handleGroupDragEnter(e, groupIndex)}
-                    onDragLeave={handleGroupDragLeave}
-                    onDrop={(e) => handleGroupDrop(e, groupIndex)}
-                    onDragEnd={handleGroupDragEnd}
-                    className="group-row cursor-move hover:bg-gray-50"
-                  >
-                    <td colSpan={4} className="p-0">
-                      <div className="bg-gray-100 p-2 border-b-2 border-blue-500 font-medium flex items-center">
+        {/* Tabla de tareas con grupos por fecha */}
+        <div className="overflow-x-auto mb-6">
+          <table className="min-w-full border-collapse">
+            <thead>
+              <tr className="bg-gray-50">
+                <th className="border px-4 py-2 text-left">Fecha</th>
+                <th className="border px-4 py-2 text-left">Hs</th>
+                <th className="border px-4 py-2 text-left">Descripción</th>
+                <th className="border px-4 py-2 text-center">Acciones</th>
+              </tr>
+            </thead>
+            
+            <tbody>
+              {taskGroups.map((group, groupIndex) => (
+                <tr
+                  key={group.id}
+                  draggable
+                  onDragStart={(e) => handleGroupDragStart(e, groupIndex)}
+                  onDragOver={(e) => handleGroupDragOver(e, groupIndex)}
+                  onDragEnter={(e) => handleGroupDragEnter(e, groupIndex)}
+                  onDragLeave={handleGroupDragLeave}
+                  onDrop={(e) => handleGroupDrop(e, groupIndex)}
+                  onDragEnd={handleGroupDragEnd}
+                  className="group-row cursor-move hover:bg-gray-50"
+                >
+                  <td colSpan={4} className="p-0">
+                    <div className="bg-gray-100 p-2 border-b-2 border-blue-500 font-medium flex items-center justify-between">
+                      <div className="flex items-center">
                         <div
                           contentEditable
                           suppressContentEditableWarning
@@ -638,191 +639,199 @@ export default function TaskTrackingApp() {
                           Arrastre para mover el grupo
                         </span>
                       </div>
-                      <table className="min-w-full">
-                        <tbody>
-                          {group.tasks.map((task, taskIndex) => (
-                            <tr
-                              key={task.id}
-                              draggable
-                              onDragStart={(e) =>
-                                handleTaskDragStart(e, groupIndex, taskIndex)
-                              }
-                              onDragOver={handleTaskDragOver}
-                              onDragEnter={handleTaskDragEnter}
-                              onDragLeave={handleTaskDragLeave}
-                              onDrop={(e) =>
-                                handleTaskDrop(e, groupIndex, taskIndex)
-                              }
-                              onDragEnd={handleTaskDragEnd}
-                              className="task-row cursor-move hover:bg-gray-50"
-                            >
-                              <td className="border px-4 py-2 w-1/6 text-gray-500 text-sm">
-                                <div className="flex items-center gap-1">
-                                  <span>↕</span>
-                                  <select
-                                    value={task.date || group.date}
-                                    onChange={(e) =>
-                                      updateTaskDate(
-                                        group.id,
-                                        task.id,
-                                        e.target.value
-                                      )
-                                    }
-                                    className="bg-transparent border-0 outline-none w-full"
-                                  >
-                                    {taskGroups.map((g) => (
-                                      <option key={g.id} value={g.date}>
-                                        {g.date}
-                                      </option>
-                                    ))}
-                                    <option value="">Otra fecha...</option>
-                                  </select>
-                                </div>
-                              </td>
-                              <td className="border px-4 py-2 w-1/6">
-                                <div
-                                  contentEditable
-                                  suppressContentEditableWarning
-                                  className="outline-none focus:bg-blue-50 min-h-8"
-                                  onBlur={(e) =>
-                                    updateTask(
+                      <button
+                        onClick={() => addTaskToGroup(group.id)}
+                        className="flex items-center text-blue-600 hover:text-blue-800 px-2 py-1 rounded hover:bg-blue-100 transition-colors"
+                        title="Agregar una nueva línea"
+                      >
+                        <Plus size={18} />
+                      </button>
+                    </div>
+                    <table className="min-w-full">
+                      <tbody>
+                        {group.tasks.map((task, taskIndex) => (
+                          <tr
+                            key={task.id}
+                            draggable
+                            onDragStart={(e) =>
+                              handleTaskDragStart(e, groupIndex, taskIndex)
+                            }
+                            onDragOver={handleTaskDragOver}
+                            onDragEnter={handleTaskDragEnter}
+                            onDragLeave={handleTaskDragLeave}
+                            onDrop={(e) =>
+                              handleTaskDrop(e, groupIndex, taskIndex)
+                            }
+                            onDragEnd={handleTaskDragEnd}
+                            className="task-row cursor-move hover:bg-gray-50"
+                          >
+                            <td className="border px-4 py-2 w-1/6 text-gray-500 text-sm">
+                              <div className="flex items-center gap-1">
+                                <span>↕</span>
+                                <select
+                                  value={task.date || group.date}
+                                  onChange={(e) =>
+                                    updateTaskDate(
                                       group.id,
                                       task.id,
-                                      "hours",
-                                      e.target.textContent
+                                      e.target.value
                                     )
                                   }
-                                  dangerouslySetInnerHTML={{
-                                    __html: task.hours,
-                                  }}
-                                />
-                              </td>
-                              <td className="border px-4 py-2">
-                                <div
-                                  contentEditable
-                                  suppressContentEditableWarning
-                                  className="outline-none focus:bg-blue-50 min-h-8"
-                                  onBlur={(e) =>
-                                    updateTask(
-                                      group.id,
-                                      task.id,
-                                      "description",
-                                      e.target.textContent
-                                    )
-                                  }
-                                  dangerouslySetInnerHTML={{
-                                    __html: task.description,
-                                  }}
-                                />
-                              </td>
-                              <td className="border px-1 py-1 text-center w-1/12">
-                                <button
-                                  onClick={() => deleteTask(group.id, task.id)}
-                                  className="text-red-500 hover:text-red-700"
+                                  className="bg-transparent border-0 outline-none w-full"
                                 >
-                                  ✕
-                                </button>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Resumen de horas */}
-          <div className="mb-6">
-            <h3 className="text-lg font-medium mb-2">Resumen</h3>
-            <div className="flex flex-wrap gap-2">
-              {summary.map((item, index) => (
-                <div
-                  key={index}
-                  className="bg-blue-100 px-3 py-1 rounded-full text-blue-800"
-                >
-                  {item.date}: {item.totalHours} hs.
-                </div>
+                                  {taskGroups.map((g) => (
+                                    <option key={g.id} value={g.date}>
+                                      {g.date}
+                                    </option>
+                                  ))}
+                                  <option value="">Otra fecha...</option>
+                                </select>
+                              </div>
+                            </td>
+                            <td className="border px-4 py-2 w-1/6">
+                              <div
+                                contentEditable
+                                suppressContentEditableWarning
+                                className="outline-none focus:bg-blue-50 min-h-8"
+                                onBlur={(e) =>
+                                  updateTask(
+                                    group.id,
+                                    task.id,
+                                    "hours",
+                                    e.target.textContent
+                                  )
+                                }
+                                dangerouslySetInnerHTML={{
+                                  __html: task.hours,
+                                }}
+                              />
+                            </td>
+                            <td className="border px-4 py-2">
+                              <div
+                                contentEditable
+                                suppressContentEditableWarning
+                                className="outline-none focus:bg-blue-50 min-h-8"
+                                onBlur={(e) =>
+                                  updateTask(
+                                    group.id,
+                                    task.id,
+                                    "description",
+                                    e.target.textContent
+                                  )
+                                }
+                                dangerouslySetInnerHTML={{
+                                  __html: task.description,
+                                }}
+                              />
+                            </td>
+                            <td className="border px-1 py-1 text-center w-1/12">
+                              <button
+                                onClick={() => deleteTask(group.id, task.id)}
+                                className="text-red-500 hover:text-red-700"
+                              >
+                                ✕
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </td>
+                </tr>
               ))}
-            </div>
-          </div>
+            </tbody>
+          </table>
+        </div>
 
-          {/* Selector de fecha para nueva tarea */}
-          {showDatePicker && (
-            <div className="mb-4 p-4 border rounded-md bg-gray-50">
-              <h3 className="text-lg mb-2">
-                Seleccionar fecha para nueva tarea
-              </h3>
-              <div className="flex gap-2">
-                <input
-                  type="date"
-                  value={newTaskDate}
-                  onChange={(e) => setNewTaskDate(e.target.value)}
-                  className="px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-                <input
-                  type="number"
-                  value={newTaskTime}
-                  onChange={(e) => setNewTaskTime(e.target.value)}
-                  className="px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-                <input
-                  type="text"
-                  value={newTaskDescription}
-                  onChange={(e) => setNewTaskDescription(e.target.value)}
-                  className="px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-                <button
-                  onClick={addNewTask}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-                >
-                  Agregar
-                </button>
-                <button
-                  onClick={() => setShowDatePicker(false)}
-                  className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600"
-                >
-                  Cancelar
-                </button>
+        {/* Resumen de horas */}
+        <div className="mb-6">
+          <h3 className="text-lg font-medium mb-2">Resumen</h3>
+          <div className="flex flex-wrap gap-2">
+            {summary.map((item, index) => (
+              <div
+                key={index}
+                className="bg-blue-100 px-3 py-1 rounded-full text-blue-800"
+              >
+                {item.date}: {item.totalHours} hs.
               </div>
-            </div>
-          )}
-
-          {/* Botones de acción */}
-          <div className="flex flex-wrap gap-3">
-            <button
-              onClick={() => setShowDatePicker(true)}
-              className="flex items-center px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-            >
-              <Plus size={18} className="mr-1" /> Nuevo
-            </button>
-            <button
-              onClick={clearAllData}
-              className="flex items-center px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
-            >
-              <Trash2 size={18} className="mr-1" /> Limpiar
-            </button>
-            <button
-              onClick={shareData}
-              className="flex items-center px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-            >
-              <Share2 size={18} className="mr-1" /> Compartir
-            </button>
-            <button
-              onClick={() => calculateSummary(taskGroups)}
-              className="flex items-center px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-            >
-              <RefreshCw size={18} className="mr-1" /> Revisar
-            </button>
+            ))}
           </div>
         </div>
-      </main>
 
-      <footer className="bg-gray-800 text-white p-4 text-center">
-        <p>&copy; {new Date().getFullYear()} JLC Montajes Industriales</p>
-      </footer>
-    </div>
-  );
+        {/* Selector de fecha para nueva tarea */}
+        {showDatePicker && (
+          <div className="mb-4 p-4 border rounded-md bg-gray-50">
+            <h3 className="text-lg mb-2">
+              Seleccionar fecha para nueva tarea
+            </h3>
+            <div className="flex gap-2">
+              <input
+                type="date"
+                value={newTaskDate}
+                onChange={(e) => setNewTaskDate(e.target.value)}
+                className="px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <input
+                type="number"
+                value={newTaskTime}
+                onChange={(e) => setNewTaskTime(e.target.value)}
+                className="px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <input
+                type="text"
+                value={newTaskDescription}
+                onChange={(e) => setNewTaskDescription(e.target.value)}
+                className="px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <button
+                onClick={addNewTask}
+                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+              >
+                Agregar
+              </button>
+              <button
+                onClick={() => setShowDatePicker(false)}
+                className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600"
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Botones de acción */}
+        <div className="flex flex-wrap gap-3">
+          <button
+            onClick={() => setShowDatePicker(true)}
+            className="flex items-center px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          >
+            <Plus size={18} className="mr-1" /> Nuevo
+          </button>
+          <button
+            onClick={clearAllData}
+            className="flex items-center px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+          >
+            <Trash2 size={18} className="mr-1" /> Limpiar
+          </button>
+          <button
+            onClick={shareData}
+            className="flex items-center px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          >
+            <Share2 size={18} className="mr-1" /> Compartir
+          </button>
+          <button
+            onClick={() => calculateSummary(taskGroups)}
+            className="flex items-center px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          >
+            <RefreshCw size={18} className="mr-1" /> Revisar
+          </button>
+        </div>
+      </div>
+    </main>
+
+    <footer className="bg-gray-800 text-white p-4 text-center">
+      <p>&copy; {new Date().getFullYear()} JLC Montajes Industriales</p>
+    </footer>
+  </div>
+);
 }
