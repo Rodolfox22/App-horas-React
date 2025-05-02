@@ -31,6 +31,7 @@ export default function TaskTrackingApp() {
     const savedData = localStorage.getItem("jlcTaskData");
     const savedUser = localStorage.getItem("jlcUserName");
 
+    //TODO: revisar, comenzar siempre con login, agregar una clave para cada usuario en el json, en el campo de inicio de sesion, debe aparecer el nombre de los usuarios guardados en localStorage
     if (savedUser) {
       setUserName(savedUser);
       setIsLoggedIn(true);
@@ -63,7 +64,8 @@ export default function TaskTrackingApp() {
       setIsLoggedIn(true);
     }
   };
-
+  
+  //TODO: necesito que las tareas pueda moverse de manera individual dentro del grupo y hacia otros grupos arrastrando
   // Función para reorganizar las tareas por fecha
   const reorganizeTasks = (tasks) => {
     // Agrupar por fecha
@@ -86,20 +88,21 @@ export default function TaskTrackingApp() {
       });
     });
 
+    
     // Crear nuevos grupos
     const newGroups = Object.keys(groupedByDate)
-      .sort()
-      .map((date) => {
-        return {
-          id: `group-${date}-${Date.now()}`,
-          date: date,
-          tasks: groupedByDate[date],
-        };
-      });
-
+    .sort()
+    .map((date) => {
+      return {
+        id: `group-${date}-${Date.now()}`,
+        date: date,
+        tasks: groupedByDate[date],
+      };
+    });
+    
     return newGroups;
   };
-
+  
   // Función para agregar una tarea a un grupo
   const addTaskToGroup = (groupId) => {
     const updatedGroups = taskGroups.map((group) => {
@@ -119,10 +122,11 @@ export default function TaskTrackingApp() {
       }
       return group;
     });
-
+    
     setTaskGroups(updatedGroups);
   };
-
+  
+  //TODO: Revisar formato de visualizacion
   // Función para calcular el resumen de horas por fecha
   const calculateSummary = (data) => {
     const summaryData = [];
@@ -130,25 +134,43 @@ export default function TaskTrackingApp() {
       const totalHours = group.tasks.reduce((sum, task) => {
         return sum + (parseFloat(task.hours) || 0);
       }, 0);
-
+      
       summaryData.push({
         date: group.date,
         totalHours: totalHours.toFixed(1),
       });
     });
-
+    
     setSummary(summaryData);
   };
-
+  
+  //TODO: revisar funcion porque no hace lo que necesito, reordena los items que hay en un grupo, yo necesito que ordene los grupos por fecha, debe tomar los grupos por fecha y reordenarlos de lugar para mejorar la organización de las tareas
   // Funcion para ordenar las tareas por fecha
+  const reorderTaskByDate = (groupId, fromIndex, toIndex) => {
+    const updatedGroups = taskGroups.map((group) => {
+      if (group.id === groupId) {
+        const newTasks = [...group.tasks];
+        const [removed] = newTasks.splice(fromIndex, 1);
+        newTasks.splice(toIndex, 0, removed);
 
+        return {
+          ...group,
+          tasks: newTasks,
+        };
+      }
+      return group;
+    });
+    
+    setTaskGroups(updatedGroups);
+  };
+  
   // Función para agregar una nueva tarea con la fecha especificada
   const addNewTask = () => {
     const date = newTaskDate;
     const time = newTaskTime;
     const task = newTaskDescription;
     const existingGroup = taskGroups.find((group) => group.date === date);
-
+    
     if (existingGroup) {
       // Agregar tarea a grupo existente
       const updatedGroups = taskGroups.map((group) => {
@@ -248,6 +270,7 @@ export default function TaskTrackingApp() {
     }
   };
 
+ //TODO: acomodar formato para copiar datos y agregar compartir con funciones de celular, si es pc, copiar, si es celular, compartir
   // Función para compartir datos (copiar al portapapeles)
   const shareData = () => {
     let text = "Fecha\tHs\tDescripción\n";
@@ -543,7 +566,8 @@ export default function TaskTrackingApp() {
             <span className="app-title-red">JLC</span>{" "}
             <span className="app-title-blue">Montajes Industriales</span>
           </h1>
-          <div className="user-greeting">Bienvenido, {userName}</div>
+          <div className="user-greeting">
+            Bienvenido, {userName}</div>
         </div>
       </header>
 
@@ -800,7 +824,13 @@ export default function TaskTrackingApp() {
               <Share2 size={18} className="mr-1" /> Compartir
             </button>
             <button
-              onClick={() => calculateSummary(taskGroups)}
+              onClick={() =>
+                reorderTaskByDate(
+                  taskGroups[0].id,
+                  0,
+                  taskGroups[0].tasks.length - 1
+                )
+              }
               className="button button-blue"
             >
               <RefreshCw size={18} className="mr-1" /> Ordenar
