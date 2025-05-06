@@ -39,7 +39,7 @@
 
 /* Estilos generales */
 body {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   margin: 0;
   padding: 0;
   background-color: #f3f4f6;
@@ -50,18 +50,25 @@ body {
 .app-container {
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
 }
 
 /* Header */
 .app-header {
+  flex: 0 0 auto;
+  width: 95vw;
   background-color: white;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   padding: 1rem;
+  height: min(14vh, 8%);
+  z-index: 10;
+  right: 5%;
 }
 
 .header-content {
-  max-width: 1200px;
+  width: 95vw;
+  max-height: 100%;
   margin: 0 auto;
   display: flex;
   justify-content: space-between;
@@ -69,59 +76,91 @@ body {
 }
 
 .app-title {
-  font-size: 1.5rem;
+  display: flex;
+  flex-direction: column;
   font-weight: bold;
+  align-items: center;
+  text-align: center;
+  font-size: 1rem;
 }
 
 .app-title-red {
+  font-size: 3em;
   color: #dc2626;
 }
 
 .app-title-blue {
+  font-size: 0.75em;
   color: #2563eb;
+}
+
+/* Cuando el dispositivo está en orientación horizontal*/
+@media (orientation: landscape) {
+  .app-title {
+    flex-direction: row;
+    gap: 1rem;
+    font-size: 1.25rem;
+  }
+
+  .app-title-red {
+    font-size: 2em;
+  }
 }
 
 .user-greeting {
   color: #4b5563;
+  display: flex;
+  align-items: center; /* Opcional, alinea verticalmente */
+  justify-content: space-between; /* Opcional, separa texto y botón */
+  gap: 8px; /* Espacio entre elementos, opcional */
 }
 
 /* Login screen */
 .login-container {
   display: flex;
+  height: 95vh;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 100vh;
   background-color: #f3f4f6;
-  padding: 1rem;
+  overflow: hidden;
 }
 
 .login-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   width: 100%;
-  max-width: 28rem;
+  max-width: 25rem;
+  height: 100%;
+  max-height: min(20rem, 80vh);
   background-color: white;
   border-radius: 0.5rem;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  padding: 1.5rem;
+  padding: 1rem;
 }
 
 .login-header {
   text-align: center;
-  margin-bottom: 2rem;
+  margin-bottom: 1rem;
 }
 
 .login-title {
-  font-size: 1.875rem;
+  font-size: max(5vw, 5vh);
   font-weight: bold;
   margin-bottom: 0.5rem;
+  display: grid;
 }
 
 .login-subtitle {
   color: #4b5563;
+  margin-bottom: 5px;
 }
 
 .login-form {
   margin-bottom: 1rem;
+  width: max(20vw, 50%);
 }
 
 .login-label {
@@ -146,7 +185,7 @@ body {
 }
 
 .login-button {
-  width: 100%;
+  width: max(20vw, 50%);
   background-color: #2563eb;
   color: white;
   padding: 0.5rem 1rem;
@@ -162,17 +201,21 @@ body {
 /* Main content */
 .main-content {
   flex-grow: 1;
-  max-width: 1200px;
+  max-width: 90vw;
   margin: 0 auto;
+  padding: 0.5rem;
+  flex: 1 1 auto;
+  overflow-y: auto;
   padding: 1rem;
+  background-color: #fff;
 }
 
 .task-container {
   background-color: white;
   border-radius: 0.5rem;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  padding: 1.5rem;
-  margin-bottom: 1.5rem;
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
 }
 
 .task-header {
@@ -297,18 +340,19 @@ body {
 }
 
 .task-table td {
+  width: 90%;
   border: 1px solid #e5e7eb;
-  padding: 0.5rem 1rem;
+  padding: 0.5rem 0.5rem;
 }
 
 .task-date-cell {
-  width: 16.666667%;
+  width: 12%;
   color: #6b7280;
   font-size: 0.875rem;
 }
 
 .task-hours-cell {
-  width: 16.666667%;
+  width: 12%;
 }
 
 .task-description-cell {
@@ -316,7 +360,7 @@ body {
 }
 
 .task-actions-cell {
-  width: 8.333333%;
+  width: 8%;
   text-align: center;
 }
 
@@ -397,12 +441,31 @@ body {
   box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
 }
 
+.date-responsive-input {
+  max-width: 100px;
+  min-width: 10px;
+}
+
 /* Footer */
 .app-footer {
+  flex: 0 0 auto;
   background-color: #1f2937;
   color: white;
   padding: 1rem;
   text-align: center;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.footer-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+  margin-top: 0.5rem;
 }
 
 /* Drag and drop styles */
