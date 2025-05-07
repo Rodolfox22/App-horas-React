@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, use } from "react";
 import {
   Plus,
   FileUp,
@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import "./App.css"; // Importar el archivo CSS
 import DatePicker from "./components/DatePicker";
+import { normalizeShortDate, normalizeToDDMMYYYY } from "./utils/DateFormat";
 
 // Componente principal de la aplicación
 export default function TaskTrackingApp() {
@@ -31,7 +32,6 @@ export default function TaskTrackingApp() {
   const [newTaskDescription, setNewTaskDescription] = useState("");
   const [newTaskFinished, setNewTaskFinished] = useState(false);
   const [showTaskHeader, setShowTaskHeader] = useState(false); // Controla la visibilidad de la ventana emergente
-  const [tasks, setTasks] = useState([]); // Para almacenar las tareas
 
   // Cargar usuarios existentes al iniciar
   useEffect(() => {
@@ -201,12 +201,13 @@ export default function TaskTrackingApp() {
   };
 
   // Función para crear una nueva tarea
-  const createTask = (date, time, task) => {
+  const createTask = (date, time, task, finished) => {
     return {
       id: Date.now().toString(),
       hours: time,
       description: task,
       date: date,
+      finished: finished,
     };
   };
 
@@ -321,24 +322,38 @@ export default function TaskTrackingApp() {
   const copyClipboard = (text) => {
     navigator.clipboard
       .writeText(text)
-      .then(() => alert("Datos copiados al portapapeles"))
+      .then(() => {
+        if (!isMobile()) {
+          alert("Datos copiados al portapapeles");
+        }
+      })
       .catch((err) => alert("Error al copiar datos: " + err));
   };
 
   // Función para compartir datos
   const shareData = () => {
-    let text = "Fecha\tHs\tDescripción\n";
+    let text = "";
 
     taskGroups.forEach((group) => {
       group.tasks.forEach((task) => {
-        text += `${group.date}\t${task.hours}\t${task.description}\n`;
+        let finishedText = "";
+        if (task.finished === "true") {
+          finishedText = ". Completo";
+        }
+        if (task.hours || task.description) {
+          text += `${group.date}\t${task.hours}\t${task.description}${finishedText}\t${userName}\n`;
+        }
       });
     });
+    text += `\nResumen de horas:\n`;
+    summary.forEach((item) => {
+      text += `${normalizeShortDate(item.date)}: ${item.totalHours} hs.\n`;
+    });
 
+    copyClipboard(text);
     if (isMobile() && navigator.share) {
       return shareMobileData(text);
     }
-    copyClipboard(text);
   };
 
   // Función para cargar archivo JSON
@@ -761,32 +776,36 @@ export default function TaskTrackingApp() {
                       <div className="group-header">
                         <div className="flex items-center">
                           <div
-                            contentEditable
                             suppressContentEditableWarning
                             className="group-date"
                             onBlur={(e) => {
-                              const newDate = e.target.textContent;
+                              const input = e.target.textContent;
                               if (
-                                /^\d{4}-\d{2}-\d{2}$/.test(newDate) ||
-                                /^\d{2}\/\d{2}\/\d{4}$/.test(newDate)
+                                /^\d{4}-\d{2}-\d{2}$/.test(input) ||
+                                /^\d{2}\/\d{2}\/\d{4}$/.test(input)
                               ) {
+                                const normalizedDate =
+                                  normalizeToDDMMYYYY(input);
                                 const updatedGroups = taskGroups.map((g, i) => {
                                   if (i === groupIndex) {
-                                    return { ...g, date: newDate };
+                                    return { ...g, date: normalizedDate };
                                   }
                                   return g;
                                 });
                                 setTaskGroups(reorganizeTasks(updatedGroups));
                               } else {
-                                e.target.textContent = group.date;
+                                e.target.textContent = normalizeShortDate(
+                                  group.date
+                                );
                                 alert(
                                   "Formato de fecha inválido. Use YYYY-MM-DD o DD/MM/YYYY"
                                 );
                               }
                             }}
                           >
-                            {group.date}
+                            {normalizeToDDMMYYYY(group.date)}
                           </div>
+
                           {/*
                           <span className="group-hint">|</span>
                           <span className="text-sm text-gray-500">
@@ -833,12 +852,12 @@ export default function TaskTrackingApp() {
                                 >
                                   {taskGroups.map((g) => (
                                     <option key={g.id} value={g.date}>
-                                      {g.date}
+                                      {normalizeToDDMMYYYY(g.date)}
                                     </option>
                                   ))}
-                                  <option value="">Otra fecha...</option>
                                 </select>
                               </td>
+
                               <td className="task-hours-cell">
                                 <div
                                   contentEditable
@@ -879,13 +898,13 @@ export default function TaskTrackingApp() {
                                 <input
                                   type="checkbox"
                                   className="editable-checkbox"
-                                  checked={task.finished === "true"}
+                                  checked={task.finished}
                                   onChange={(e) =>
                                     updateTask(
                                       group.id,
                                       task.id,
                                       "finished",
-                                      e.target.checked ? "true" : "false"
+                                      e.target.checked
                                     )
                                   }
                                 />
@@ -915,7 +934,7 @@ export default function TaskTrackingApp() {
             <div className="summary-items">
               {summary.map((item, index) => (
                 <div key={index} className="summary-item">
-                  {item.date}: {item.totalHours} hs.
+                  {normalizeShortDate(item.date)}: {item.totalHours} hs.
                 </div>
               ))}
             </div>
