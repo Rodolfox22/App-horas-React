@@ -10,6 +10,7 @@ import {
   X,
 } from "lucide-react";
 import "./App.css"; // Importar el archivo CSS
+import DatePicker from "./components/DatePicker";
 
 // Componente principal de la aplicación
 export default function TaskTrackingApp() {
@@ -29,7 +30,8 @@ export default function TaskTrackingApp() {
   const [newTaskTime, setNewTaskTime] = useState("");
   const [newTaskDescription, setNewTaskDescription] = useState("");
   const [newTaskFinished, setNewTaskFinished] = useState(false);
-  const [showTaskHeader, setShowTaskHeader] = useState(false); // Controls visibility of the JLC popup
+  const [showTaskHeader, setShowTaskHeader] = useState(false); // Controla la visibilidad de la ventana emergente
+  const [tasks, setTasks] = useState([]); // Para almacenar las tareas
 
   // Cargar usuarios existentes al iniciar
   useEffect(() => {
@@ -785,10 +787,11 @@ export default function TaskTrackingApp() {
                           >
                             {group.date}
                           </div>
+                          {/*
                           <span className="group-hint">|</span>
                           <span className="text-sm text-gray-500">
                             Arrastre para mover el grupo
-                          </span>
+                          </span>*/}
                         </div>
                         <button
                           onClick={() => addTaskToGroup(group.id)}
@@ -817,7 +820,6 @@ export default function TaskTrackingApp() {
                               className="task-row"
                             >
                               <td className="task-date-cell">
-                                {/*<span>↕</span>*/}
                                 <select
                                   value={task.date || group.date}
                                   onChange={(e) =>
@@ -920,48 +922,19 @@ export default function TaskTrackingApp() {
           </div>
 
           {/* Selector de fecha para nueva tarea */}
-          {showDatePicker && (
-            <div className="date-picker">
-              <h3 className="date-picker-title">
-                Seleccionar fecha para nueva tarea
-              </h3>
-              <div className="date-picker-controls">
-                <input
-                  type="date"
-                  value={newTaskDate}
-                  onChange={(e) => setNewTaskDate(e.target.value)}
-                  className="date-input"
-                />
-                <input
-                  type="number"
-                  value={newTaskTime}
-                  onChange={(e) => setNewTaskTime(e.target.value)}
-                  className="date-input"
-                />
-                <input
-                  type="text"
-                  value={newTaskDescription}
-                  onChange={(e) => setNewTaskDescription(e.target.value)}
-                  className="date-input"
-                />
-                <input
-                  type="checkbox"
-                  checked={newTaskFinished}
-                  onChange={(e) => setNewTaskFinished(e.target.checked)}
-                  className="checkbox-input"
-                />
-                <button onClick={addNewTask} className="button button-blue">
-                  Agregar
-                </button>
-                <button
-                  onClick={() => setShowDatePicker(false)}
-                  className="button button-gray"
-                >
-                  Cancelar
-                </button>
-              </div>
-            </div>
-          )}
+          <DatePicker
+            showDatePicker={showDatePicker}
+            setShowDatePicker={setShowDatePicker}
+            newTaskDate={newTaskDate}
+            setNewTaskDate={setNewTaskDate}
+            newTaskTime={newTaskTime}
+            setNewTaskTime={setNewTaskTime}
+            newTaskDescription={newTaskDescription}
+            setNewTaskDescription={setNewTaskDescription}
+            newTaskFinished={newTaskFinished}
+            setNewTaskFinished={setNewTaskFinished}
+            addNewTask={addNewTask}
+          />
         </div>
       </main>
 
@@ -998,7 +971,7 @@ export default function TaskTrackingApp() {
         </div>
       </div>
 
-      {/* Show the task header popup when clicking on JLC */}
+      {/* Mostrar ventana emergente cuando se hace click en el nombre de la aplicación */}
       {showTaskHeader && (
         <Popup onClose={() => setShowTaskHeader(false)}>
           <TaskHeaderContent />
