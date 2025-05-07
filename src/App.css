@@ -1,3 +1,19 @@
+/* Variables CSS para los anchos de columnas de la tabla */
+:root {
+  /* Anchos de columnas */
+  --column-date-width: 60px;
+  --column-hours-width: 60px;
+  --column-finished-width: 50px;
+  --column-actions-width: 50px;
+  
+  /* Colores */
+  --border-color: #e5e7eb;
+  --hover-bg-color: #f9fafb;
+  --focus-bg-color: #dbeafe;
+  --header-bg-color: #f3f4f6;
+  --header-border-color: #3b82f6;
+}
+
 .App {
   text-align: center;
 }
@@ -51,6 +67,7 @@ body {
   display: flex;
   flex-direction: column;
   height: 100vh;
+  width: 100vw;
   overflow: hidden;
 }
 
@@ -107,12 +124,54 @@ body {
   }
 }
 
+.hidden {
+  display: none;
+}
+
 .user-greeting {
   color: #4b5563;
   display: flex;
   align-items: center; /* Opcional, alinea verticalmente */
   justify-content: space-between; /* Opcional, separa texto y botón */
   gap: 8px; /* Espacio entre elementos, opcional */
+}
+
+/* Estilos de ventana emergente */
+.popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.popup-content {
+  background-color: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  position: relative;
+  max-width: 90%;
+  width: 600px;
+}
+
+.popup-close-button {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #666;
+}
+
+.popup-close-button:hover {
+  color: #000;
 }
 
 /* Login screen */
@@ -201,7 +260,7 @@ body {
 /* Main content */
 .main-content {
   flex-grow: 1;
-  max-width: 90vw;
+  width: 90vw;
   margin: 0 auto;
   padding: 0.5rem;
   flex: 1 1 auto;
@@ -275,14 +334,21 @@ body {
 .task-table {
   width: 100%;
   border-collapse: collapse;
-  margin-bottom: 1.5rem;
+  table-layout: fixed; /* Importante para que respete los anchos definidos */
+}
+
+.task-table th,
+.task-table td {
+  border: 1px solid #e5e7eb;
+  padding: 0.5rem;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 .task-table th {
   background-color: #f9fafb;
-  border: 1px solid #e5e7eb;
-  padding: 0.5rem 1rem;
   text-align: left;
+  font-weight: 500;
 }
 
 .group-row {
@@ -293,12 +359,13 @@ body {
   background-color: #f9fafb;
 }
 
+/* Estilos para el encabezado del grupo */
 .group-header {
+  display: flex;
   background-color: #f3f4f6;
   padding: 0.5rem;
   border-bottom: 2px solid #3b82f6;
   font-weight: 500;
-  display: flex;
   align-items: center;
   justify-content: space-between;
 }
@@ -314,7 +381,6 @@ body {
 
 .group-hint {
   color: #9ca3af;
-  margin: 0 0.5rem;
   font-size: 0.875rem;
 }
 
@@ -339,38 +405,50 @@ body {
   background-color: #f9fafb;
 }
 
-.task-table td {
-  width: 90%;
-  border: 1px solid #e5e7eb;
-  padding: 0.5rem 0.5rem;
-}
-
 .task-date-cell {
-  width: 12%;
-  color: #6b7280;
+  width: var(--column-date-width); /* Ancho fijo para la columna de fecha */
   font-size: 0.875rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .task-hours-cell {
-  width: 12%;
-}
-
-.task-description-cell {
-  width: auto;
-}
-
-.task-actions-cell {
-  width: 8%;
+  width: var(--column-hours-width); /* Ancho fijo para la columna de horas */
   text-align: center;
 }
 
+.task-description-cell {
+  /* Esta columna ocupará el espacio restante */
+  width: auto;
+}
+
+.task-finished-cell {
+  width: var(--column-finished-width); /* Ancho fijo para la columna de finalizado */
+  text-align: center;
+}
+
+.task-actions-cell {
+  width: var(--column-actions-width); /* Ancho fijo para la columna de acciones */
+  text-align: center;
+}
+
+/* Estilos para elementos editables y filas */
 .editable-cell {
+  width: 100%;
   outline: none;
-  min-height: 2rem;
+  min-height: 1rem;
+  padding: 2px;
 }
 
 .editable-cell:focus {
   background-color: #dbeafe;
+}
+
+.editable-checkbox {
+  cursor: pointer;
+  width: 16px;
+  height: 16px;
 }
 
 .task-select {

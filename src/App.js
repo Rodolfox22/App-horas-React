@@ -7,6 +7,7 @@ import {
   RefreshCw,
   Calendar,
   Logout,
+  X,
 } from "lucide-react";
 import "./App.css"; // Importar el archivo CSS
 
@@ -27,6 +28,8 @@ export default function TaskTrackingApp() {
   );
   const [newTaskTime, setNewTaskTime] = useState("");
   const [newTaskDescription, setNewTaskDescription] = useState("");
+  const [newTaskFinished, setNewTaskFinished] = useState(false);
+  const [showTaskHeader, setShowTaskHeader] = useState(false); // Controls visibility of the JLC popup
 
   // Cargar usuarios existentes al iniciar
   useEffect(() => {
@@ -195,11 +198,22 @@ export default function TaskTrackingApp() {
     setTaskGroups(updatedGroups);
   };
 
+  // Función para crear una nueva tarea
+  const createTask = (date, time, task) => {
+    return {
+      id: Date.now().toString(),
+      hours: time,
+      description: task,
+      date: date,
+    };
+  };
+
   // Función para agregar una nueva tarea con la fecha especificada
   const addNewTask = () => {
     const date = newTaskDate;
     const time = newTaskTime;
     const task = newTaskDescription;
+    const finished = newTaskFinished;
     const existingGroup = taskGroups.find((group) => group.date === date);
 
     if (existingGroup) {
@@ -208,15 +222,7 @@ export default function TaskTrackingApp() {
         if (group.date === date) {
           return {
             ...group,
-            tasks: [
-              ...group.tasks,
-              {
-                id: Date.now().toString(),
-                hours: time,
-                description: task,
-                date: date,
-              },
-            ],
+            tasks: [...group.tasks, createTask(date, time, task, finished)],
           };
         }
         return group;
@@ -227,14 +233,7 @@ export default function TaskTrackingApp() {
       const newGroup = {
         id: `group-${date}-${Date.now()}`,
         date: date,
-        tasks: [
-          {
-            id: Date.now().toString(),
-            hours: time,
-            description: task,
-            date: date,
-          },
-        ],
+        tasks: [createTask(date, time, task, finished)],
       };
 
       // Agregar nuevo grupo y ordenar
@@ -576,6 +575,77 @@ export default function TaskTrackingApp() {
     setTaskGroups(updatedGroups);
   };
 
+  //TODO: revisar el funcionamiento de este componente, ambos botones deben poder funcionar correctamente, cambiando los datos del localstorage
+  // Componente para mostrar la ventana emergente de la cabecera de la tarea
+  const TaskHeaderContent = () => (
+    <div className="task-header">
+      <h2 className="task-title">Registro de Tareas</h2>
+      <div className="action-buttons">
+        <button
+          onClick={() => {
+            if (fileInputRef.current) {
+              fileInputRef.current.click();
+              setTimeout(() => {
+                setShowTaskHeader(false);
+              }, 300);
+            } else {
+              alert("El selector de archivos no está disponible.");
+            }
+          }}
+          className="button button-gray"
+        >
+          <FileUp size={18} className="mr-1" /> Abrir Archivo
+        </button>
+        <input
+          type="file"
+          ref={fileInputRef}
+          onChange={handleFileUpload}
+          accept=".json"
+          className="hidden"
+        />{" "}
+        <button
+          onClick={() => {
+            setShowTaskHeader(false);
+            setTimeout(exportToJson, 300);
+          }}
+          className="button button-gray"
+        >
+          <FileUp size={18} className="mr-1" /> Guardar Archivo
+        </button>
+      </div>
+    </div>
+  );
+
+  // Popup component
+  const Popup = ({ onClose, children }) => {
+    // Close popup when clicking outside
+    const popupRef = useRef(null);
+
+    useEffect(() => {
+      const handleClickOutside = (event) => {
+        if (popupRef.current && !popupRef.current.contains(event.target)) {
+          onClose();
+        }
+      };
+
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => {
+        document.removeEventListener("mousedown", handleClickOutside);
+      };
+    }, [onClose]);
+
+    return (
+      <div className="popup-overlay">
+        <div className="popup-content" ref={popupRef}>
+          <button className="popup-close-button" onClick={onClose}>
+            <X size={18} />
+          </button>
+          {children}
+        </div>
+      </div>
+    );
+  };
+
   // Vista de login
   if (!isLoggedIn) {
     return (
@@ -628,10 +698,16 @@ export default function TaskTrackingApp() {
       <header className="app-header">
         <div className="header-content">
           <h1 className="app-title">
-            <span className="app-title app-title-red app-title-header ">
+            <span
+              className="app-title app-title-red app-title-header"
+              onClick={() => setShowTaskHeader(true)}
+              style={{ cursor: "pointer" }}
+              role="button"
+              tabIndex={0}
+            >
               JLC
             </span>{" "}
-            <span className="app-title app-title-blue app-title-header ">
+            <span className="app-title app-title-blue app-title-header">
               Montajes Industriales
             </span>
           </h1>
@@ -640,7 +716,7 @@ export default function TaskTrackingApp() {
             <div>
               <button
                 onClick={handleLogout}
-                className="button button-red "
+                className="button button-red"
                 disabled={!userName.trim()}
               >
                 X
@@ -652,37 +728,16 @@ export default function TaskTrackingApp() {
 
       <main className="main-content">
         <div className="task-container">
-          <div className="task-header">
-            <h2 className="task-title">Registro de Tareas</h2>
-            <div className="action-buttons">
-              <button
-                onClick={() => fileInputRef.current.click()}
-                className="button button-gray"
-              >
-                <FileUp size={18} className="mr-1" /> Abrir Archivo
-              </button>
-              <input
-                type="file"
-                ref={fileInputRef}
-                onChange={handleFileUpload}
-                accept=".json"
-                className="hidden"
-              />
-              <button onClick={exportToJson} className="button button-gray">
-                <FileUp size={18} className="mr-1" /> Guardar Archivo
-              </button>
-            </div>
-          </div>
-
           {/* Tabla de tareas con grupos por fecha */}
           <div className="overflow-x-auto mb-6">
             <table className="task-table">
               <thead>
                 <tr>
-                  <th>Fecha</th>
-                  <th>Hs</th>
-                  <th>Descripción</th>
-                  <th className="text-center">Acciones</th>
+                  <th className="task-date-cell">Fecha</th>
+                  <th className="task-hours-cell">Hs</th>
+                  <th className="task-description-cell">Descripción</th>
+                  <th className="task-finished-cell"></th>
+                  <th className="task-actions-cell"></th>
                 </tr>
               </thead>
 
@@ -700,7 +755,7 @@ export default function TaskTrackingApp() {
                     className="group-row"
                   >
                     {/*Fila de cabecera con fecha y acciones*/}
-                    <td colSpan={4} className="p-0">
+                    <td colSpan={5} className="p-0">
                       <div className="group-header">
                         <div className="flex items-center">
                           <div
@@ -762,27 +817,25 @@ export default function TaskTrackingApp() {
                               className="task-row"
                             >
                               <td className="task-date-cell">
-                                <div className="flex items-center gap-1">
-                                  <span>↕</span>
-                                  <select
-                                    value={task.date || group.date}
-                                    onChange={(e) =>
-                                      updateTaskDate(
-                                        group.id,
-                                        task.id,
-                                        e.target.value
-                                      )
-                                    }
-                                    className="task-select"
-                                  >
-                                    {taskGroups.map((g) => (
-                                      <option key={g.id} value={g.date}>
-                                        {g.date}
-                                      </option>
-                                    ))}
-                                    <option value="">Otra fecha...</option>
-                                  </select>
-                                </div>
+                                {/*<span>↕</span>*/}
+                                <select
+                                  value={task.date || group.date}
+                                  onChange={(e) =>
+                                    updateTaskDate(
+                                      group.id,
+                                      task.id,
+                                      e.target.value
+                                    )
+                                  }
+                                  className="task-select"
+                                >
+                                  {taskGroups.map((g) => (
+                                    <option key={g.id} value={g.date}>
+                                      {g.date}
+                                    </option>
+                                  ))}
+                                  <option value="">Otra fecha...</option>
+                                </select>
                               </td>
                               <td className="task-hours-cell">
                                 <div
@@ -818,6 +871,21 @@ export default function TaskTrackingApp() {
                                   dangerouslySetInnerHTML={{
                                     __html: task.description,
                                   }}
+                                />
+                              </td>
+                              <td className="task-finished-cell">
+                                <input
+                                  type="checkbox"
+                                  className="editable-checkbox"
+                                  checked={task.finished === "true"}
+                                  onChange={(e) =>
+                                    updateTask(
+                                      group.id,
+                                      task.id,
+                                      "finished",
+                                      e.target.checked ? "true" : "false"
+                                    )
+                                  }
                                 />
                               </td>
                               <td className="task-actions-cell">
@@ -876,6 +944,12 @@ export default function TaskTrackingApp() {
                   onChange={(e) => setNewTaskDescription(e.target.value)}
                   className="date-input"
                 />
+                <input
+                  type="checkbox"
+                  checked={newTaskFinished}
+                  onChange={(e) => setNewTaskFinished(e.target.checked)}
+                  className="checkbox-input"
+                />
                 <button onClick={addNewTask} className="button button-blue">
                   Agregar
                 </button>
@@ -906,12 +980,13 @@ export default function TaskTrackingApp() {
           <button onClick={shareData} className="button button-blue">
             <Share2 size={18} className="mr-1" /> Compartir
           </button>
+          {/*
           <button
             onClick={() =>
               reorderGroupsByDate(
                 taskGroups.date,
                 0,
-                taskGroups[0].tasks.length - 1,
+                taskGroups[0]?.tasks.length - 1 || 0,
                 "asc"
               )
             }
@@ -919,8 +994,16 @@ export default function TaskTrackingApp() {
           >
             <RefreshCw size={18} className="mr-1" /> Ordenar
           </button>
+                */}
         </div>
       </div>
+
+      {/* Show the task header popup when clicking on JLC */}
+      {showTaskHeader && (
+        <Popup onClose={() => setShowTaskHeader(false)}>
+          <TaskHeaderContent />
+        </Popup>
+      )}
 
       <footer className="app-footer">
         <p>&copy; {new Date().getFullYear()} JLC Montajes Industriales</p>
