@@ -338,16 +338,20 @@ export default function TaskTrackingApp() {
       group.tasks.forEach((task) => {
         let finishedText = "";
         if (task.finished === "true") {
-          finishedText = ". Completo";
+          finishedText = ". Completo.";
         }
         if (task.hours || task.description) {
-          text += `${normalizeShortDate(group.date)}\t${task.hours}\t${task.description}${finishedText}\t${userName}\n`;
+          text += `${normalizeShortDate(group.date)}\t${task.hours}\t${
+            task.description
+          }${finishedText}\t${userName}\n`;
         }
       });
     });
     text += `\nResumen de horas:\n`;
     summary.forEach((item) => {
-      text += `${normalizeShortDate(item.date)}: ${item.totalHours} hs.\n`;
+      if (item.totalHours > 0) {
+        text += `${normalizeShortDate(item.date)}: ${item.totalHours} hs.\n`;
+      }
     });
 
     copyClipboard(text);
