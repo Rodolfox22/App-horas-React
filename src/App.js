@@ -341,7 +341,7 @@ export default function TaskTrackingApp() {
           finishedText = ". Completo";
         }
         if (task.hours || task.description) {
-          text += `${group.date}\t${task.hours}\t${task.description}${finishedText}\t${userName}\n`;
+          text += `${normalizeShortDate(group.date)}\t${task.hours}\t${task.description}${finishedText}\t${userName}\n`;
         }
       });
     });
@@ -685,6 +685,7 @@ export default function TaskTrackingApp() {
               onChange={(e) => setUserName(e.target.value)}
               placeholder="Ingrese su nombre"
               list="usersJLC"
+              autoComplete="on"
             />
             <datalist id="usersJLC">
               <option value="Anto"></option>
