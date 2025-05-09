@@ -1,31 +1,66 @@
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import './index.css';
-import App from './App';
-import reportWebVitals from './reportWebVitals';
-import * as serviceWorkerRegistration from './utils/serviceWorkerRegistration';
-import UpdateNotifier from './components/UpdateNotifier'; // Asegúrate de crear este componente
+import React from "react";
+import ReactDOM from "react-dom/client";
+import "./index.css";
+import App from "./App";
+import reportWebVitals from "./reportWebVitals";
+import * as serviceWorkerRegistration from "./utils/serviceWorkerRegistration";
+import UpdateNotifier from "./components/UpdateNotifier";
 
-const root = ReactDOM.createRoot(document.getElementById('root'));
-root.render(
-  <React.StrictMode>
-    <UpdateNotifier />
-    <App />
-  </React.StrictMode>
-);
+const root = ReactDOM.createRoot(document.getElementById("root"));
 
-// Registra el Service Worker con configuración de actualización
-serviceWorkerRegistration.register({
-  onUpdate: (registration) => {
-    if (registration.waiting) {
-      // Mostrar notificación al usuario
-      if (window.confirm('Hay una nueva versión disponible. ¿Quieres actualizar ahora?')) {
-        registration.waiting.postMessage({ type: 'SKIP_WAITING' });
-        window.location.reload();
-      }
+function RootComponent() {
+  // Efecto para verificación periódica de versión
+  React.useEffect(() => {
+    if (process.env.NODE_ENV === "production") {
+      const checkVersion = async () => {
+        try {
+          const res = await fetch(
+            `${process.env.PUBLIC_URL}/version.json?t=${Date.now()}`
+          );
+          const data = await res.json();
+
+          if (data.version !== process.env.REACT_APP_VERSION) {
+            window.location.reload(true);
+          }
+        } catch (error) {
+          console.error("Error verificando versión:", error);
+        }
+      };
+
+      const interval = setInterval(checkVersion, 3600000); // Cada hora
+      return () => clearInterval(interval);
     }
-  }
-});
+  }, []);
+
+  return (
+    <React.StrictMode>
+      <App />
+    </React.StrictMode>
+  );
+}
+
+root.render(<RootComponent />);
+
+// Configuración del Service Worker
+if (process.env.NODE_ENV === "production") {
+  serviceWorkerRegistration.register({
+    onUpdate: (registration) => {
+      if (registration.waiting) {
+        const userResponse = window.confirm(
+          "Hay una nueva versión disponible. ¿Quieres actualizar ahora?"
+        );
+
+        if (userResponse) {
+          registration.waiting.postMessage({ type: "SKIP_WAITING" });
+          window.location.reload();
+        }
+      }
+    },
+    onSuccess: () => {
+      console.log("Service Worker registrado con éxito");
+    },
+  });
+}
 
 // If you want to start measuring performance in your app, pass a function
 // to log results (for example: reportWebVitals(console.log))

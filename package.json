@@ -52,7 +52,7 @@
     "conventional-changelog-cli": "^3.0.0",
     "standard-version": "^9.5.0"
   },
-  "homepage": "https://rodolfox22.github.io/App-horas-React/",
+  "homepage": "https://rodolfox22.github.io/App-horas-React",
   "config": {
     "commitizen": {
       "path": "./node_modules/cz-conventional-changelog"

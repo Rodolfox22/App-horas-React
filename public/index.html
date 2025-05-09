@@ -40,4 +40,11 @@
       To create a production bundle, use `npm run build` or `yarn build`.
     -->
   </body>
+  <script>
+    if(window.chrome && chrome.runtime && chrome.runtime.id) {
+      window.addEventListener('error', e => {
+        if(e.message.includes('chrome-extension')) e.preventDefault();
+      });
+    }
+  </script>
 </html>
