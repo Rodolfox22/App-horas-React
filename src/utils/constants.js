@@ -1,0 +1,1 @@
+export const setTaskDataKey = (username) => `jlcTaskData_${username}`;

@@ -1,7 +1,7 @@
 /* Variables CSS para los anchos de columnas de la tabla */
 :root {
   /* Anchos de columnas */
-  --column-date-width: min(10vw,60px); 
+  --column-date-width: min(15vw,70px); 
   --column-hours-width: min(10vw,60px); ;
   --column-finished-width: min(10vw,60px); 
   --column-actions-width: min(10vw,60px); 
