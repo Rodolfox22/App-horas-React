@@ -1,17 +1,13 @@
-import { useState, useEffect, useRef, use } from "react";
-import {
-  Plus,
-  FileUp,
-  Share2,
-  Trash2,
-  RefreshCw,
-  Calendar,
-  Logout,
-  X,
-} from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Plus, FileUp, Share2, Trash2, X } from "lucide-react";
 import "./App.css"; // Importar el archivo CSS
 import DatePicker from "./components/DatePicker";
-import { normalizeShortDate, normalizeToDDMMYYYY } from "./utils/DateFormat";
+import {
+  normalizeShortDate,
+  normalizeToDDMMYYYY,
+  getCurrentDate,
+} from "./utils/DateFormat";
+import { setTaskDataKey, getUsersKey, defaultUsers } from "./utils/constants"; // Importar las constantes
 
 // Componente principal de la aplicación
 export default function TaskTrackingApp() {
@@ -33,16 +29,26 @@ export default function TaskTrackingApp() {
   const [newTaskFinished, setNewTaskFinished] = useState(false);
   const [showTaskHeader, setShowTaskHeader] = useState(false); // Controla la visibilidad de la ventana emergente
 
+  const userInputRef = useRef(null);
+
+  useEffect(() => {
+    if (!isLoggedIn && userInputRef.current) {
+      userInputRef.current.focus();
+      userInputRef.current.select(); // Selecciona el contenido si ya hay texto
+    }
+  }, [isLoggedIn]);
+
   // Cargar usuarios existentes al iniciar
   useEffect(() => {
-    const users = JSON.parse(localStorage.getItem("jlcTaskUsers") || "[]");
-    setExistingUsers(users);
+    const storedUsers = JSON.parse(localStorage.getItem(getUsersKey()) || "[]");
+    const mergedUsers = Array.from(new Set([...defaultUsers, ...storedUsers]));
+    setExistingUsers(mergedUsers);
   }, []);
 
   // Cargar datos del usuario cuando cambia
   useEffect(() => {
     if (isLoggedIn && userName) {
-      const userData = localStorage.getItem(`jlcTaskData_${userName}`);
+      const userData = localStorage.getItem(setTaskDataKey(userName));
       if (userData) {
         try {
           const parsedData = JSON.parse(userData);
@@ -62,7 +68,7 @@ export default function TaskTrackingApp() {
   useEffect(() => {
     if (isLoggedIn && userName && taskGroups.length > 0) {
       localStorage.setItem(
-        `jlcTaskData_${userName}`,
+        setTaskDataKey(userName),
         JSON.stringify(taskGroups)
       );
       calculateSummary(taskGroups);
@@ -77,6 +83,9 @@ export default function TaskTrackingApp() {
     return firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase();
   };
 
+  // Declarar constantes
+  const taskStorageKey = setTaskDataKey(userName);
+
   // Función para manejar el login
   const handleLogin = (e) => {
     e.preventDefault();
@@ -86,10 +95,10 @@ export default function TaskTrackingApp() {
       setUserName(formattedName); // Actualizar con el nombre formateado
 
       // Actualizar lista de usuarios si es nuevo
-      const users = JSON.parse(localStorage.getItem("jlcTaskUsers") || "[]");
+      const users = JSON.parse(localStorage.getItem(getUsersKey()) || "[]");
       if (!users.includes(formattedName)) {
         const updatedUsers = [...users, formattedName];
-        localStorage.setItem("jlcTaskUsers", JSON.stringify(updatedUsers));
+        localStorage.setItem(getUsersKey(), JSON.stringify(updatedUsers));
       }
 
       setIsLoggedIn(true);
@@ -299,7 +308,7 @@ export default function TaskTrackingApp() {
     if (window.confirm("¿Está seguro de que desea eliminar todos los datos?")) {
       setTaskGroups([]);
       setSummary([]);
-      localStorage.removeItem("jlcTaskData");
+      localStorage.removeItem(setTaskDataKey(userName));
     }
   };
 
@@ -310,12 +319,22 @@ export default function TaskTrackingApp() {
 
   // Compartir usando API de Web Share (dispositivos móviles compatibles)
   const shareMobileData = (text) => {
-    navigator
-      .share({
-        title: "Tareas",
-        text: text,
-      })
-      .catch((err) => alert("Error al compartir: " + err));
+    const date = getCurrentDate();
+    const fileName = `${userName} ${date}.txt`;
+    const blob = new Blob([text], { type: "text/plain" });
+    const file = new File([blob], fileName, { type: "text/plain" });
+
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      navigator
+        .share({
+          title: "Tareas",
+          text: "Archivo de tareas",
+          files: [file],
+        })
+        .catch((err) => alert("Error al compartir: " + err));
+    } else {
+      alert("Tu navegador no soporta compartir archivos.");
+    }
   };
 
   // Copiar al portapapeles (PC o móvil sin Web Share API)
@@ -364,13 +383,36 @@ export default function TaskTrackingApp() {
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
+      const fileName = file.name;
+
+      // Extraer userName del nombre del archivo (formato: `${userName} ${date}.json`)
+      const fileNameParts = fileName.split(" ");
+      const userNameFromFile = fileNameParts[0]; // El primer elemento es el userName
+      const dateFromFile = fileNameParts
+        .slice(1)
+        .join(" ")
+        .replace(".json", ""); // El resto es la fecha (opcional)
+
       const reader = new FileReader();
       reader.onload = (event) => {
         try {
           const jsonData = JSON.parse(event.target.result);
+
+          // Actualizar taskGroups con los datos del archivo
           setTaskGroups(jsonData);
+
+          // Calcular el resumen con los nuevos datos
           calculateSummary(jsonData);
-          alert("Archivo cargado con éxito");
+
+          // Guardar los nuevos datos en el localStorage usando el userName del archivo
+          localStorage.setItem(
+            setTaskDataKey(userNameFromFile),
+            JSON.stringify(jsonData)
+          );
+
+          alert(
+            `Archivo cargado con éxito para el usuario: ${userNameFromFile}`
+          );
         } catch (error) {
           alert("Error al procesar el archivo: " + error);
         }
@@ -384,8 +426,8 @@ export default function TaskTrackingApp() {
     const dataStr = JSON.stringify(taskGroups, null, 2);
     const dataUri =
       "data:application/json;charset=utf-8," + encodeURIComponent(dataStr);
-
-    const exportFileDefaultName = "jlc_tareas.json";
+    const date = getCurrentDate();
+    const exportFileDefaultName = `${userName} ${date}.json`;
 
     let linkElement = document.createElement("a");
     linkElement.setAttribute("href", dataUri);
@@ -596,7 +638,6 @@ export default function TaskTrackingApp() {
     setTaskGroups(updatedGroups);
   };
 
-  //TODO: revisar el funcionamiento de este componente, ambos botones deben poder funcionar correctamente, cambiando los datos del localstorage
   // Componente para mostrar la ventana emergente de la cabecera de la tarea
   const TaskHeaderContent = () => (
     <div className="task-header">
@@ -682,6 +723,7 @@ export default function TaskTrackingApp() {
 
           <div className="login-form">
             <input
+              ref={userInputRef}
               type="text"
               id="userName"
               className="login-input"
@@ -689,16 +731,13 @@ export default function TaskTrackingApp() {
               onChange={(e) => setUserName(e.target.value)}
               placeholder="Ingrese su nombre"
               list="usersJLC"
+              name="userName"
               autoComplete="on"
             />
             <datalist id="usersJLC">
-              <option value="Anto"></option>
-              <option value="Brian"></option>
-              <option value="Esteban"></option>
-              <option value="Jorge"></option>
-              <option value="Maxi"></option>
-              <option value="Pablo"></option>
-              <option value="Santi"></option>
+              {existingUsers.map((user, index) => (
+                <option key={index} value={user} />
+              ))}
             </datalist>
           </div>
 
@@ -845,7 +884,7 @@ export default function TaskTrackingApp() {
                             >
                               <td className="task-date-cell">
                                 <select
-                                  value={task.date || group.date}
+                                  value={task.date || group.date || ""}
                                   onChange={(e) =>
                                     updateTaskDate(
                                       group.id,
@@ -877,7 +916,7 @@ export default function TaskTrackingApp() {
                                     )
                                   }
                                   dangerouslySetInnerHTML={{
-                                    __html: task.hours,
+                                    __html: task.hours || "",
                                   }}
                                 />
                               </td>
@@ -895,7 +934,7 @@ export default function TaskTrackingApp() {
                                     )
                                   }
                                   dangerouslySetInnerHTML={{
-                                    __html: task.description,
+                                    __html: task.description || "",
                                   }}
                                 />
                               </td>
@@ -903,7 +942,7 @@ export default function TaskTrackingApp() {
                                 <input
                                   type="checkbox"
                                   className="editable-checkbox"
-                                  checked={task.finished}
+                                  checked={!!task.finished}
                                   onChange={(e) =>
                                     updateTask(
                                       group.id,
@@ -937,11 +976,13 @@ export default function TaskTrackingApp() {
           <div className="mb-6">
             <h3 className="summary-title">Resumen</h3>
             <div className="summary-items">
-              {summary.map((item, index) => (
-                <div key={index} className="summary-item">
-                  {normalizeShortDate(item.date)}: {item.totalHours} hs.
-                </div>
-              ))}
+              {summary
+                .filter((item) => item.totalHours > 0)
+                .map((item, index) => (
+                  <div key={index} className="summary-item">
+                    {normalizeShortDate(item.date)}: {item.totalHours} hs.
+                  </div>
+                ))}
             </div>
           </div>
 
@@ -977,21 +1018,6 @@ export default function TaskTrackingApp() {
           <button onClick={shareData} className="button button-blue">
             <Share2 size={18} className="mr-1" /> Compartir
           </button>
-          {/*
-          <button
-            onClick={() =>
-              reorderGroupsByDate(
-                taskGroups.date,
-                0,
-                taskGroups[0]?.tasks.length - 1 || 0,
-                "asc"
-              )
-            }
-            className="button button-blue"
-          >
-            <RefreshCw size={18} className="mr-1" /> Ordenar
-          </button>
-                */}
         </div>
       </div>
 

@@ -69,7 +69,7 @@ const DatePicker = ({
         <input
           ref={dateInputRef}
           type="date"
-          value={newTaskDate}
+          value={newTaskDate||""}
           onChange={(e) => setNewTaskDate(e.target.value)}
           onKeyDown={(e) => handleKeyDown(e, "date")}
           className="date-input"
@@ -77,7 +77,7 @@ const DatePicker = ({
         <input
           ref={timeInputRef}
           type="number"
-          value={newTaskTime}
+          value={newTaskTime||""}
           onChange={(e) => setNewTaskTime(e.target.value)}
           onKeyDown={(e) => handleKeyDown(e, "time")}
           className="date-input"
@@ -89,7 +89,7 @@ const DatePicker = ({
         <input
           ref={descriptionInputRef}
           type="text"
-          value={newTaskDescription}
+          value={newTaskDescription||""}
           onChange={(e) => setNewTaskDescription(e.target.value)}
           onKeyDown={(e) => handleKeyDown(e, "description")}
           className="date-input"
@@ -99,7 +99,7 @@ const DatePicker = ({
           <input
             ref={checkboxInputRef}
             type="checkbox"
-            checked={newTaskFinished}
+            checked={!!newTaskFinished}
             onChange={(e) => setNewTaskFinished(e.target.checked)}
             onKeyDown={(e) => handleKeyDown(e, "checkbox")}
             className="checkbox-input"
