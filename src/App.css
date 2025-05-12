@@ -580,12 +580,3 @@ body {
   margin-bottom: 0.5rem;
   margin-top: 0.5rem;
 }
-
-/* Drag and drop styles */
-.drag-over {
-  background-color: #ebf8ff;
-}
-
-.drag-item {
-  opacity: 0.4;
-}

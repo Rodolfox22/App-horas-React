@@ -8,6 +8,7 @@ import {
   getCurrentDate,
 } from "./utils/DateFormat";
 import { setTaskDataKey, getUsersKey, defaultUsers } from "./utils/constants"; // Importar las constantes
+import FileUploader from "./components/FileUploader";
 
 // Componente principal de la aplicación
 export default function TaskTrackingApp() {
@@ -17,9 +18,6 @@ export default function TaskTrackingApp() {
   const [existingUsers, setExistingUsers] = useState([]);
   const [taskGroups, setTaskGroups] = useState([]);
   const [summary, setSummary] = useState([]);
-  const fileInputRef = useRef(null);
-  const [dragItemGroup, setDragItemGroup] = useState(null);
-  const [dragItemTask, setDragItemTask] = useState(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [newTaskDate, setNewTaskDate] = useState(
     new Date().toISOString().split("T")[0]
@@ -111,7 +109,6 @@ export default function TaskTrackingApp() {
     setUserName("");
   };
 
-  //TODO: necesito que las tareas pueda moverse de manera individual dentro del grupo y hacia otros grupos arrastrando
   // Función para reorganizar las tareas por fecha
   const reorganizeTasks = (tasks) => {
     // Agrupar por fecha
@@ -171,7 +168,6 @@ export default function TaskTrackingApp() {
     setTaskGroups(updatedGroups);
   };
 
-  //TODO: Revisar formato de visualizacion
   // Función para calcular el resumen de horas por fecha
   const calculateSummary = (data) => {
     const summaryData = [];
@@ -187,26 +183,6 @@ export default function TaskTrackingApp() {
     });
 
     setSummary(summaryData);
-  };
-
-  //TODO: revisar funcion porque no hace lo que necesito, reordena los items que hay en un grupo, yo necesito que ordene los grupos por fecha, debe tomar los grupos por fecha y reordenarlos de lugar para mejorar la organización de las tareas
-  //Funcion para reordenar los grupos por fecha en orden ascendente o descendente
-  const reorderGroupsByDate = (groupId, fromIndex, toIndex, order) => {
-    const updatedGroups = taskGroups.map((group) => {
-      if (group.id === groupId) {
-        const newTasks = [...group.tasks];
-        const [removed] = newTasks.splice(fromIndex, 1);
-        newTasks.splice(toIndex, 0, removed);
-
-        return {
-          ...group,
-          tasks: newTasks,
-        };
-      }
-      return group;
-    });
-
-    setTaskGroups(updatedGroups);
   };
 
   // Función para crear una nueva tarea
@@ -312,8 +288,6 @@ export default function TaskTrackingApp() {
     }
   };
 
-  //TODO: acomodar formato para copiar datos y agregar compartir con funciones de celular, si es pc, copiar, si es celular, compartir
-
   const isMobile = () =>
     /Android|iPhone|iPad|iPod|Windows Phone/i.test(navigator.userAgent);
 
@@ -379,48 +353,6 @@ export default function TaskTrackingApp() {
     }
   };
 
-  // Función para cargar archivo JSON
-  const handleFileUpload = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const fileName = file.name;
-
-      // Extraer userName del nombre del archivo (formato: `${userName} ${date}.json`)
-      const fileNameParts = fileName.split(" ");
-      const userNameFromFile = fileNameParts[0]; // El primer elemento es el userName
-      const dateFromFile = fileNameParts
-        .slice(1)
-        .join(" ")
-        .replace(".json", ""); // El resto es la fecha (opcional)
-
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        try {
-          const jsonData = JSON.parse(event.target.result);
-
-          // Actualizar taskGroups con los datos del archivo
-          setTaskGroups(jsonData);
-
-          // Calcular el resumen con los nuevos datos
-          calculateSummary(jsonData);
-
-          // Guardar los nuevos datos en el localStorage usando el userName del archivo
-          localStorage.setItem(
-            setTaskDataKey(userNameFromFile),
-            JSON.stringify(jsonData)
-          );
-
-          alert(
-            `Archivo cargado con éxito para el usuario: ${userNameFromFile}`
-          );
-        } catch (error) {
-          alert("Error al procesar el archivo: " + error);
-        }
-      };
-      reader.readAsText(file);
-    }
-  };
-
   // Función para exportar datos a JSON y descargar
   const exportToJson = () => {
     const dataStr = JSON.stringify(taskGroups, null, 2);
@@ -453,174 +385,6 @@ export default function TaskTrackingApp() {
     setTaskGroups(updatedGroups);
   };
 
-  // Mover tarea entre grupos
-  const moveTask = (fromGroupId, taskId, toGroupId) => {
-    let taskToMove = null;
-    let sourceGroup = null;
-
-    // Encontrar la tarea a mover y su grupo
-    const updatedGroups = taskGroups.map((group) => {
-      if (group.id === fromGroupId) {
-        sourceGroup = group;
-        const remainingTasks = group.tasks.filter((task) => task.id !== taskId);
-        const task = group.tasks.find((task) => task.id === taskId);
-
-        if (task) {
-          taskToMove = {
-            ...task,
-            date: taskGroups.find((g) => g.id === toGroupId).date,
-          };
-        }
-
-        return {
-          ...group,
-          tasks: remainingTasks,
-        };
-      }
-      return group;
-    });
-
-    // Añadir la tarea al grupo destino
-    const finalGroups = updatedGroups.map((group) => {
-      if (group.id === toGroupId && taskToMove) {
-        return {
-          ...group,
-          tasks: [...group.tasks, taskToMove],
-        };
-      }
-      return group;
-    });
-
-    // Eliminar grupos vacíos
-    const nonEmptyGroups = finalGroups.filter(
-      (group) => group.tasks.length > 0
-    );
-
-    setTaskGroups(nonEmptyGroups);
-  };
-
-  // Reordenar tarea dentro del mismo grupo
-  const reorderTask = (groupId, fromIndex, toIndex) => {
-    const updatedGroups = taskGroups.map((group) => {
-      if (group.id === groupId) {
-        const newTasks = [...group.tasks];
-        const [removed] = newTasks.splice(fromIndex, 1);
-        newTasks.splice(toIndex, 0, removed);
-
-        return {
-          ...group,
-          tasks: newTasks,
-        };
-      }
-      return group;
-    });
-
-    setTaskGroups(updatedGroups);
-  };
-
-  // Funciones para el drag and drop de grupos
-  const handleGroupDragStart = (e, index) => {
-    setDragItemGroup(index);
-    e.dataTransfer.setData("type", "group");
-    e.dataTransfer.setData("index", index);
-    e.currentTarget.style.opacity = "0.4";
-  };
-
-  const handleGroupDragOver = (e, index) => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = "move";
-    return false;
-  };
-
-  const handleGroupDragEnter = (e, index) => {
-    e.preventDefault();
-    e.currentTarget.classList.add("bg-blue-50");
-  };
-
-  const handleGroupDragLeave = (e) => {
-    e.currentTarget.classList.remove("bg-blue-50");
-  };
-
-  const handleGroupDrop = (e, toIndex) => {
-    e.preventDefault();
-    e.currentTarget.classList.remove("bg-blue-50");
-
-    const type = e.dataTransfer.getData("type");
-
-    if (type === "group") {
-      const fromIndex = parseInt(e.dataTransfer.getData("index"));
-      if (fromIndex === toIndex) return;
-
-      const newGroups = [...taskGroups];
-      const [movedItem] = newGroups.splice(fromIndex, 1);
-      newGroups.splice(toIndex, 0, movedItem);
-
-      setTaskGroups(newGroups);
-    }
-
-    setDragItemGroup(null);
-  };
-
-  const handleGroupDragEnd = (e) => {
-    e.currentTarget.style.opacity = "1";
-    setDragItemGroup(null);
-  };
-
-  // Funciones para el drag and drop de tareas individuales
-  const handleTaskDragStart = (e, groupIndex, taskIndex) => {
-    setDragItemTask({ groupIndex, taskIndex });
-    e.dataTransfer.setData("type", "task");
-    e.dataTransfer.setData("groupIndex", groupIndex);
-    e.dataTransfer.setData("taskIndex", taskIndex);
-    e.currentTarget.style.opacity = "0.4";
-  };
-
-  const handleTaskDragOver = (e) => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = "move";
-    return false;
-  };
-
-  const handleTaskDragEnter = (e) => {
-    e.preventDefault();
-    e.currentTarget.classList.add("bg-blue-50");
-  };
-
-  const handleTaskDragLeave = (e) => {
-    e.currentTarget.classList.remove("bg-blue-50");
-  };
-
-  const handleTaskDrop = (e, toGroupIndex, toTaskIndex) => {
-    e.preventDefault();
-    e.currentTarget.classList.remove("bg-blue-50");
-
-    const type = e.dataTransfer.getData("type");
-
-    if (type === "task") {
-      const fromGroupIndex = parseInt(e.dataTransfer.getData("groupIndex"));
-      const fromTaskIndex = parseInt(e.dataTransfer.getData("taskIndex"));
-
-      const fromGroupId = taskGroups[fromGroupIndex].id;
-      const toGroupId = taskGroups[toGroupIndex].id;
-      const taskId = taskGroups[fromGroupIndex].tasks[fromTaskIndex].id;
-
-      if (fromGroupId === toGroupId) {
-        // Reordenar dentro del mismo grupo
-        reorderTask(fromGroupId, fromTaskIndex, toTaskIndex);
-      } else {
-        // Mover a otro grupo
-        moveTask(fromGroupId, taskId, toGroupId);
-      }
-    }
-
-    setDragItemTask(null);
-  };
-
-  const handleTaskDragEnd = (e) => {
-    e.currentTarget.style.opacity = "1";
-    setDragItemTask(null);
-  };
-
   // Eliminar tarea
   const deleteTask = (groupId, taskId) => {
     const updatedGroups = taskGroups
@@ -643,28 +407,32 @@ export default function TaskTrackingApp() {
     <div className="task-header">
       <h2 className="task-title">Registro de Tareas</h2>
       <div className="action-buttons">
-        <button
-          onClick={() => {
-            if (fileInputRef.current) {
-              fileInputRef.current.click();
-              setTimeout(() => {
-                setShowTaskHeader(false);
-              }, 300);
-            } else {
-              alert("El selector de archivos no está disponible.");
+        <FileUploader
+          onFileLoaded={({ data, userNameF, error }) => {
+            if (error) {
+              alert("Error al cargar archivo: " + error.message);
+              return;
             }
+
+            // Mostrar los datos importados en pantalla (no guardarlos en la sesión actual)
+            if (userName == userNameF) {
+              setTaskGroups(data);
+              calculateSummary(data);
+            }
+
+            localStorage.setItem(
+              setTaskDataKey(userNameF),
+              JSON.stringify(data)
+            );
+            alert(`Archivo cargado con éxito para el usuario: ${userNameF}`);
+            setShowTaskHeader(false);
           }}
-          className="button button-gray"
         >
-          <FileUp size={18} className="mr-1" /> Abrir Archivo
-        </button>
-        <input
-          type="file"
-          ref={fileInputRef}
-          onChange={handleFileUpload}
-          accept=".json"
-          className="hidden"
-        />{" "}
+          <button className="button button-gray">
+            <FileUp size={18} className="mr-1" /> Abrir Archivo
+          </button>
+        </FileUploader>
+
         <button
           onClick={() => {
             setShowTaskHeader(false);
@@ -804,17 +572,7 @@ export default function TaskTrackingApp() {
 
               <tbody>
                 {taskGroups.map((group, groupIndex) => (
-                  <tr
-                    key={group.id}
-                    draggable
-                    onDragStart={(e) => handleGroupDragStart(e, groupIndex)}
-                    onDragOver={(e) => handleGroupDragOver(e, groupIndex)}
-                    onDragEnter={(e) => handleGroupDragEnter(e, groupIndex)}
-                    onDragLeave={handleGroupDragLeave}
-                    onDrop={(e) => handleGroupDrop(e, groupIndex)}
-                    onDragEnd={handleGroupDragEnd}
-                    className="group-row"
-                  >
+                  <tr key={group.id} className="group-row">
                     {/*Fila de cabecera con fecha y acciones*/}
                     <td colSpan={5} className="p-0">
                       <div className="group-header">
@@ -867,21 +625,7 @@ export default function TaskTrackingApp() {
                       <table className="task-table">
                         <tbody>
                           {group.tasks.map((task, taskIndex) => (
-                            <tr
-                              key={task.id}
-                              draggable
-                              onDragStart={(e) =>
-                                handleTaskDragStart(e, groupIndex, taskIndex)
-                              }
-                              onDragOver={handleTaskDragOver}
-                              onDragEnter={handleTaskDragEnter}
-                              onDragLeave={handleTaskDragLeave}
-                              onDrop={(e) =>
-                                handleTaskDrop(e, groupIndex, taskIndex)
-                              }
-                              onDragEnd={handleTaskDragEnd}
-                              className="task-row"
-                            >
+                            <tr key={task.id} className="task-row">
                               <td className="task-date-cell">
                                 <select
                                   value={task.date || group.date || ""}
