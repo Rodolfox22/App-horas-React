@@ -269,6 +269,12 @@ body {
   background-color: #fff;
 }
 
+.popup-content {
+  background-color: white;
+  width: auto;
+  height: auto;
+}
+
 .task-container {
   background-color: white;
   border-radius: 0.5rem;
@@ -279,19 +285,32 @@ body {
 
 .task-header {
   display: flex;
+  flex-direction: column;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1rem;
+  display: "flex";
+  gap: 10px;
+  padding: 15px;
 }
 
 .task-title {
   font-size: 1.25rem;
   font-weight: 600;
+  margin-bottom: 10px;
 }
 
 .action-buttons {
   display: flex;
   gap: 0.5rem;
+  justify-content: center;
+  margin-bottom: 10px;
+}
+
+.versio-footer {
+  margin-top: auto;
+  font-size: 0.8em;
+  color: #666;
+  text-align: center;
 }
 
 .button {
@@ -500,7 +519,7 @@ body {
 
 .white-bg {
   background-color: white;
-  border: 1px solid rgba(30, 64, 175, 0.3); 
+  border: 1px solid rgba(30, 64, 175, 0.3);
 }
 
 /* Date picker */
@@ -595,7 +614,6 @@ body {
   margin-bottom: 0.5rem;
   margin-top: 0.5rem;
 }
-
 
 .github-link {
   position: absolute;

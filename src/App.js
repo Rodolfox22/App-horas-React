@@ -7,12 +7,13 @@ import {
   normalizeToDDMMYYYY,
   getCurrentDate,
 } from "./utils/DateFormat";
-import { setTaskDataKey, getUsersKey, defaultUsers } from "./utils/constants";
+import { taskDataKey, getUsersKey, defaultUsers } from "./utils/constants";
 import FileUploader from "./components/FileUploader";
 import {
   GroupVisibilityManager,
   useGroupVisibility,
 } from "./components/GroupVisibilityManager";
+import VersionInfo from "./components/VersionInfo";
 
 export default function TaskTrackingApp() {
   // Estados de autenticación
@@ -62,7 +63,7 @@ export default function TaskTrackingApp() {
   // Cargar datos del usuario cuando cambia
   useEffect(() => {
     if (isLoggedIn && userName) {
-      const userData = localStorage.getItem(setTaskDataKey(userName));
+      const userData = localStorage.getItem(taskDataKey(userName));
       if (userData) {
         try {
           const parsedData = JSON.parse(userData);
@@ -81,10 +82,7 @@ export default function TaskTrackingApp() {
   // Guardar datos cuando cambian
   useEffect(() => {
     if (isLoggedIn && userName && taskGroups.length > 0) {
-      localStorage.setItem(
-        setTaskDataKey(userName),
-        JSON.stringify(taskGroups)
-      );
+      localStorage.setItem(taskDataKey(userName), JSON.stringify(taskGroups));
       calculateSummary(taskGroups);
     }
   }, [taskGroups, isLoggedIn, userName]);
@@ -253,7 +251,7 @@ export default function TaskTrackingApp() {
     if (window.confirm("¿Está seguro de que desea eliminar todos los datos?")) {
       setTaskGroups([]);
       setSummary([]);
-      localStorage.removeItem(setTaskDataKey(userName));
+      localStorage.removeItem(taskDataKey(userName));
     }
   };
 
@@ -374,7 +372,10 @@ export default function TaskTrackingApp() {
   // Componente para mostrar la ventana emergente de la cabecera de la tarea
   const TaskHeaderContent = () => (
     <div className="task-header">
+      {/* Título arriba */}
       <h2 className="task-title">Registro de Tareas</h2>
+
+      {/* Botones centrados */}
       <div className="action-buttons">
         <FileUploader
           onFileLoaded={({ data, userNameF, error }) => {
@@ -384,10 +385,7 @@ export default function TaskTrackingApp() {
               setTaskGroups(data);
               calculateSummary(data);
             }
-            localStorage.setItem(
-              setTaskDataKey(userNameF),
-              JSON.stringify(data)
-            );
+            localStorage.setItem(taskDataKey(userNameF), JSON.stringify(data));
             alert(`Archivo cargado con éxito para el usuario: ${userNameF}`);
             setShowTaskHeader(false);
           }}
@@ -406,6 +404,11 @@ export default function TaskTrackingApp() {
         >
           <FileUp size={18} className="mr-1" /> Guardar Archivo
         </button>
+      </div>
+
+      {/* Versión como footer */}
+      <div className="version-footer">
+        <VersionInfo compact />
       </div>
     </div>
   );
@@ -576,9 +579,9 @@ export default function TaskTrackingApp() {
                                     className="group-visibility-button"
                                   >
                                     {groupVisibility[group.id] ? (
-                                      <EyeOff size={20} />
+                                      <EyeOff size={22} />
                                     ) : (
-                                      <Eye size={20} />
+                                      <Eye size={22} />
                                     )}
                                   </button>
 
@@ -703,7 +706,7 @@ export default function TaskTrackingApp() {
                         <div
                           key={index}
                           className={`summary-item ${
-                            item.totalHours == (9) ? "white-bg" : ""
+                            item.totalHours == 9 ? "white-bg" : ""
                           }`}
                         >
                           {normalizeShortDate(item.date)}: {item.totalHours} hs.
@@ -744,12 +747,11 @@ export default function TaskTrackingApp() {
           <Trash2 size={18} className="mr-1" /> Limpiar
         </button>
         <button
-          onClick={toggleAllGroupsVisibility} className="button button-gray"
+          onClick={toggleAllGroupsVisibility}
+          className="button button-gray"
         >
           {hiddenGroups.length ? <EyeOff size={20} /> : <Eye size={20} />}
-          {hiddenGroups.length
-                              ? " Mostrar todos"
-                              : " Ocultar completos"}
+          {hiddenGroups.length ? " Mostrar todos" : " Ocultar completos"}
         </button>
         <button onClick={shareData} className="button button-blue">
           <Share2 size={18} className="mr-1" /> Compartir

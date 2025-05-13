@@ -1,4 +1,4 @@
-export const setTaskDataKey = (username) => `jlcTaskData_${username}`;
+export const taskDataKey = (username) => `jlcTaskData_${username}`;
 export const getUsersKey = () => `jlcTaskUsers`;
 export const defaultUsers = [
   "Anto",
