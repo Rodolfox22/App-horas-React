@@ -4,7 +4,6 @@ import "./index.css";
 import App from "./App";
 import reportWebVitals from "./reportWebVitals";
 import * as serviceWorkerRegistration from "./utils/serviceWorkerRegistration";
-import UpdateNotifier from "./components/UpdateNotifier";
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 

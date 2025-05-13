@@ -14,6 +14,7 @@ export function normalizeToDDMMYYYY(dateStr) {
 export function normalizeShortDate(dateStr) {
   if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
     const [year, month, day] = dateStr.split("-");
+    console.log("year", year);
     return `${day}-${month}`;
   } else if (/^\d{2}\/\d{2}\/\d{4}$/.test(dateStr)) {
     const [day, month] = dateStr.split("/");

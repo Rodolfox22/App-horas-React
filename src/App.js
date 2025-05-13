@@ -1,23 +1,30 @@
 import { useState, useEffect, useRef } from "react";
-import { Plus, FileUp, Share2, Trash2, X } from "lucide-react";
-import "./App.css"; // Importar el archivo CSS
+import { Plus, FileUp, Share2, Trash2, X, Eye, EyeOff } from "lucide-react";
+import "./App.css";
 import DatePicker from "./components/DatePicker";
 import {
   normalizeShortDate,
   normalizeToDDMMYYYY,
   getCurrentDate,
 } from "./utils/DateFormat";
-import { setTaskDataKey, getUsersKey, defaultUsers } from "./utils/constants"; // Importar las constantes
+import { setTaskDataKey, getUsersKey, defaultUsers } from "./utils/constants";
 import FileUploader from "./components/FileUploader";
+import {
+  GroupVisibilityManager,
+  useGroupVisibility,
+} from "./components/GroupVisibilityManager";
 
-// Componente principal de la aplicación
 export default function TaskTrackingApp() {
-  // Estados
+  // Estados de autenticación
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userName, setUserName] = useState("");
   const [existingUsers, setExistingUsers] = useState([]);
+
+  // Estados
   const [taskGroups, setTaskGroups] = useState([]);
   const [summary, setSummary] = useState([]);
+
+  // New task form states
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [newTaskDate, setNewTaskDate] = useState(
     new Date().toISOString().split("T")[0]
@@ -25,14 +32,23 @@ export default function TaskTrackingApp() {
   const [newTaskTime, setNewTaskTime] = useState("");
   const [newTaskDescription, setNewTaskDescription] = useState("");
   const [newTaskFinished, setNewTaskFinished] = useState(false);
-  const [showTaskHeader, setShowTaskHeader] = useState(false); // Controla la visibilidad de la ventana emergente
+  const [showTaskHeader, setShowTaskHeader] = useState(false);
+
+  // Visibility management
+  const {
+    hiddenGroups,
+    groupVisibility,
+    toggleAllGroupsVisibility,
+    toggleGroupVisibility,
+  } = useGroupVisibility([], taskGroups);
 
   const userInputRef = useRef(null);
 
+  // Focus user input when not logged in
   useEffect(() => {
     if (!isLoggedIn && userInputRef.current) {
       userInputRef.current.focus();
-      userInputRef.current.select(); // Selecciona el contenido si ya hay texto
+      userInputRef.current.select();
     }
   }, [isLoggedIn]);
 
@@ -73,16 +89,11 @@ export default function TaskTrackingApp() {
     }
   }, [taskGroups, isLoggedIn, userName]);
 
-  // Función para formatear el nombre
+  // Formateo de nombre de usuario
   const formatUserName = (name) => {
-    // Tomar solo el primer nombre (antes del primer espacio)
     const firstName = name.split(" ")[0];
-    // Capitalizar primera letra y minúsculas el resto
     return firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase();
   };
-
-  // Declarar constantes
-  const taskStorageKey = setTaskDataKey(userName);
 
   // Función para manejar el login
   const handleLogin = (e) => {
@@ -90,7 +101,7 @@ export default function TaskTrackingApp() {
     const formattedName = formatUserName(userName.trim());
 
     if (formattedName) {
-      setUserName(formattedName); // Actualizar con el nombre formateado
+      setUserName(formattedName);
 
       // Actualizar lista de usuarios si es nuevo
       const users = JSON.parse(localStorage.getItem(getUsersKey()) || "[]");
@@ -107,42 +118,6 @@ export default function TaskTrackingApp() {
   const handleLogout = () => {
     setIsLoggedIn(false);
     setUserName("");
-  };
-
-  // Función para reorganizar las tareas por fecha
-  const reorganizeTasks = (tasks) => {
-    // Agrupar por fecha
-    const groupedByDate = {};
-
-    tasks.forEach((group) => {
-      group.tasks.forEach((task) => {
-        const date = task.date || group.date;
-
-        if (!groupedByDate[date]) {
-          groupedByDate[date] = [];
-        }
-
-        groupedByDate[date].push({
-          id: task.id,
-          hours: task.hours,
-          description: task.description,
-          date: date,
-        });
-      });
-    });
-
-    // Crear nuevos grupos
-    const newGroups = Object.keys(groupedByDate)
-      .sort()
-      .map((date) => {
-        return {
-          id: `group-${date}-${Date.now()}`,
-          date: date,
-          tasks: groupedByDate[date],
-        };
-      });
-
-    return newGroups;
   };
 
   // Función para agregar una tarea a un grupo
@@ -185,51 +160,45 @@ export default function TaskTrackingApp() {
     setSummary(summaryData);
   };
 
-  // Función para crear una nueva tarea
-  const createTask = (date, time, task, finished) => {
-    return {
-      id: Date.now().toString(),
-      hours: time,
-      description: task,
-      date: date,
-      finished: finished,
-    };
-  };
+  const createTask = (date, time, task, finished) => ({
+    id: Date.now().toString(),
+    hours: time,
+    description: task,
+    date: date,
+    finished: finished,
+  });
 
-  // Función para agregar una nueva tarea con la fecha especificada
   const addNewTask = () => {
-    const date = newTaskDate;
-    const time = newTaskTime;
-    const task = newTaskDescription;
-    const finished = newTaskFinished;
+    const { date, time, task, finished } = {
+      date: newTaskDate,
+      time: newTaskTime,
+      task: newTaskDescription,
+      finished: newTaskFinished,
+    };
+
     const existingGroup = taskGroups.find((group) => group.date === date);
 
     if (existingGroup) {
-      // Agregar tarea a grupo existente
-      const updatedGroups = taskGroups.map((group) => {
-        if (group.date === date) {
-          return {
-            ...group,
-            tasks: [...group.tasks, createTask(date, time, task, finished)],
-          };
-        }
-        return group;
-      });
+      const updatedGroups = taskGroups.map((group) =>
+        group.date === date
+          ? {
+              ...group,
+              tasks: [...group.tasks, createTask(date, time, task, finished)],
+            }
+          : group
+      );
       setTaskGroups(updatedGroups);
     } else {
-      // Crear nuevo grupo con la primera tarea
       const newGroup = {
         id: `group-${date}-${Date.now()}`,
         date: date,
         tasks: [createTask(date, time, task, finished)],
       };
-
-      // Agregar nuevo grupo y ordenar
-      const newGroups = [...taskGroups, newGroup].sort(
-        (a, b) => new Date(a.date) - new Date(b.date)
+      setTaskGroups(
+        [...taskGroups, newGroup].sort(
+          (a, b) => new Date(a.date) - new Date(b.date)
+        )
       );
-
-      setTaskGroups(newGroups);
     }
 
     setShowDatePicker(false);
@@ -409,17 +378,12 @@ export default function TaskTrackingApp() {
       <div className="action-buttons">
         <FileUploader
           onFileLoaded={({ data, userNameF, error }) => {
-            if (error) {
-              alert("Error al cargar archivo: " + error.message);
-              return;
-            }
-
-            // Mostrar los datos importados en pantalla (no guardarlos en la sesión actual)
-            if (userName == userNameF) {
+            if (error)
+              return alert("Error al cargar archivo: " + error.message);
+            if (userName === userNameF) {
               setTaskGroups(data);
               calculateSummary(data);
             }
-
             localStorage.setItem(
               setTaskDataKey(userNameF),
               JSON.stringify(data)
@@ -446,9 +410,7 @@ export default function TaskTrackingApp() {
     </div>
   );
 
-  // Popup component
   const Popup = ({ onClose, children }) => {
-    // Close popup when clicking outside
     const popupRef = useRef(null);
 
     useEffect(() => {
@@ -459,9 +421,8 @@ export default function TaskTrackingApp() {
       };
 
       document.addEventListener("mousedown", handleClickOutside);
-      return () => {
+      return () =>
         document.removeEventListener("mousedown", handleClickOutside);
-      };
     }, [onClose]);
 
     return (
@@ -557,178 +518,202 @@ export default function TaskTrackingApp() {
 
       <main className="main-content">
         <div className="task-container">
-          {/* Tabla de tareas con grupos por fecha */}
-          <div className="overflow-x-auto mb-6">
-            <table className="task-table">
-              <thead>
-                <tr>
-                  <th className="task-date-cell">Fecha</th>
-                  <th className="task-hours-cell">Hs</th>
-                  <th className="task-description-cell">Descripción</th>
-                  <th className="task-finished-cell"></th>
-                  <th className="task-actions-cell"></th>
-                </tr>
-              </thead>
+          <GroupVisibilityManager
+            taskGroups={taskGroups}
+            hiddenGroups={hiddenGroups}
+            groupVisibility={groupVisibility}
+            onToggleAllGroups={toggleAllGroupsVisibility}
+            onToggleGroup={toggleGroupVisibility}
+            render={({
+              toggleAllGroupsVisibility,
+              toggleGroupVisibility,
+              hiddenGroups,
+              groupVisibility,
+            }) => (
+              <>
+                <div className="overflow-x-auto mb-6">
+                  <table className="task-table">
+                    <thead>
+                      <tr>
+                        <th className="task-date-cell">Fecha</th>
+                        <th className="task-hours-cell">Hs</th>
+                        <th className="task-description-cell">Descripción</th>
+                        <th className="task-finished-cell global-visibility-control">
+                          {" "}
+                        </th>
+                        <th className="task-actions-cell"></th>
+                      </tr>
+                    </thead>
 
-              <tbody>
-                {taskGroups.map((group, groupIndex) => (
-                  <tr key={group.id} className="group-row">
-                    {/*Fila de cabecera con fecha y acciones*/}
-                    <td colSpan={5} className="p-0">
-                      <div className="group-header">
-                        <div className="flex items-center">
-                          <div
-                            suppressContentEditableWarning
-                            className="group-date"
-                            onBlur={(e) => {
-                              const input = e.target.textContent;
-                              if (
-                                /^\d{4}-\d{2}-\d{2}$/.test(input) ||
-                                /^\d{2}\/\d{2}\/\d{4}$/.test(input)
-                              ) {
-                                const normalizedDate =
-                                  normalizeToDDMMYYYY(input);
-                                const updatedGroups = taskGroups.map((g, i) => {
-                                  if (i === groupIndex) {
-                                    return { ...g, date: normalizedDate };
-                                  }
-                                  return g;
-                                });
-                                setTaskGroups(reorganizeTasks(updatedGroups));
-                              } else {
-                                e.target.textContent = normalizeShortDate(
-                                  group.date
-                                );
-                                alert(
-                                  "Formato de fecha inválido. Use YYYY-MM-DD o DD/MM/YYYY"
-                                );
-                              }
-                            }}
-                          >
-                            {normalizeToDDMMYYYY(group.date)}
-                          </div>
+                    <tbody>
+                      {taskGroups.map((group) => {
+                        if (hiddenGroups.includes(group.id)) return null;
 
-                          {/*
-                          <span className="group-hint">|</span>
-                          <span className="text-sm text-gray-500">
-                            Arrastre para mover el grupo
-                          </span>*/}
-                        </div>
-                        <button
-                          onClick={() => addTaskToGroup(group.id)}
-                          className="add-task-button"
-                          title="Agregar una nueva línea"
+                        const totalHours = group.tasks.reduce(
+                          (sum, task) => sum + (parseFloat(task.hours) || 0),
+                          0
+                        );
+
+                        return (
+                          <tr key={group.id} className="group-row">
+                            {/*Fila de cabecera con fecha y acciones*/}
+                            <td colSpan={5} className="p-0">
+                              <div className="group-header">
+                                <div className="flex items-center">
+                                  <div className="group-date">
+                                    {normalizeToDDMMYYYY(group.date)}
+                                    <span className="text-sm text-gray-500">
+                                      {"   -   "}
+                                      {`${totalHours} hs.  -  ${group.tasks.length} tareas`}
+                                    </span>
+                                  </div>
+                                </div>
+                                <div className="group-buttons">
+                                  <button
+                                    onClick={() =>
+                                      toggleGroupVisibility(group.id)
+                                    }
+                                    className="group-visibility-button"
+                                  >
+                                    {groupVisibility[group.id] ? (
+                                      <EyeOff size={20} />
+                                    ) : (
+                                      <Eye size={20} />
+                                    )}
+                                  </button>
+
+                                  <button
+                                    onClick={() => addTaskToGroup(group.id)}
+                                    className="add-task-button"
+                                    title="Agregar una nueva línea"
+                                  >
+                                    <Plus size={18} />
+                                  </button>
+                                </div>
+                              </div>
+
+                              {!groupVisibility[group.id] && (
+                                <table className="task-table">
+                                  <tbody>
+                                    {group.tasks.map((task) => (
+                                      <tr key={task.id} className="task-row">
+                                        <td className="task-date-cell">
+                                          <select
+                                            value={
+                                              task.date || group.date || ""
+                                            }
+                                            onChange={(e) =>
+                                              updateTaskDate(
+                                                group.id,
+                                                task.id,
+                                                e.target.value
+                                              )
+                                            }
+                                            className="task-select"
+                                          >
+                                            {taskGroups.map((g) => (
+                                              <option key={g.id} value={g.date}>
+                                                {normalizeToDDMMYYYY(g.date)}
+                                              </option>
+                                            ))}
+                                          </select>
+                                        </td>
+
+                                        <td className="task-hours-cell">
+                                          <div
+                                            contentEditable
+                                            suppressContentEditableWarning
+                                            className="editable-cell"
+                                            onBlur={(e) =>
+                                              updateTask(
+                                                group.id,
+                                                task.id,
+                                                "hours",
+                                                e.target.textContent
+                                              )
+                                            }
+                                            dangerouslySetInnerHTML={{
+                                              __html: task.hours || "",
+                                            }}
+                                          />
+                                        </td>
+                                        <td className="task-description-cell">
+                                          <div
+                                            contentEditable
+                                            suppressContentEditableWarning
+                                            className="editable-cell"
+                                            onBlur={(e) =>
+                                              updateTask(
+                                                group.id,
+                                                task.id,
+                                                "description",
+                                                e.target.textContent
+                                              )
+                                            }
+                                            dangerouslySetInnerHTML={{
+                                              __html: task.description || "",
+                                            }}
+                                          />
+                                        </td>
+                                        <td className="task-finished-cell">
+                                          <input
+                                            type="checkbox"
+                                            className="editable-checkbox"
+                                            checked={!!task.finished}
+                                            onChange={(e) =>
+                                              updateTask(
+                                                group.id,
+                                                task.id,
+                                                "finished",
+                                                e.target.checked
+                                              )
+                                            }
+                                          />
+                                        </td>
+                                        <td className="task-actions-cell">
+                                          <button
+                                            onClick={() =>
+                                              deleteTask(group.id, task.id)
+                                            }
+                                            className="delete-button"
+                                          >
+                                            ✕
+                                          </button>
+                                        </td>
+                                      </tr>
+                                    ))}
+                                  </tbody>
+                                </table>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Resumen de horas */}
+                <div className="mb-6">
+                  <h3 className="summary-title">Resumen</h3>
+                  <div className="summary-items">
+                    {summary
+                      .filter((item) => item.totalHours > 0)
+                      .map((item, index) => (
+                        <div
+                          key={index}
+                          className={`summary-item ${
+                            item.totalHours == (9) ? "white-bg" : ""
+                          }`}
                         >
-                          <Plus size={18} />
-                        </button>
-                      </div>
-                      <table className="task-table">
-                        <tbody>
-                          {group.tasks.map((task, taskIndex) => (
-                            <tr key={task.id} className="task-row">
-                              <td className="task-date-cell">
-                                <select
-                                  value={task.date || group.date || ""}
-                                  onChange={(e) =>
-                                    updateTaskDate(
-                                      group.id,
-                                      task.id,
-                                      e.target.value
-                                    )
-                                  }
-                                  className="task-select"
-                                >
-                                  {taskGroups.map((g) => (
-                                    <option key={g.id} value={g.date}>
-                                      {normalizeToDDMMYYYY(g.date)}
-                                    </option>
-                                  ))}
-                                </select>
-                              </td>
-
-                              <td className="task-hours-cell">
-                                <div
-                                  contentEditable
-                                  suppressContentEditableWarning
-                                  className="editable-cell"
-                                  onBlur={(e) =>
-                                    updateTask(
-                                      group.id,
-                                      task.id,
-                                      "hours",
-                                      e.target.textContent
-                                    )
-                                  }
-                                  dangerouslySetInnerHTML={{
-                                    __html: task.hours || "",
-                                  }}
-                                />
-                              </td>
-                              <td className="task-description-cell">
-                                <div
-                                  contentEditable
-                                  suppressContentEditableWarning
-                                  className="editable-cell"
-                                  onBlur={(e) =>
-                                    updateTask(
-                                      group.id,
-                                      task.id,
-                                      "description",
-                                      e.target.textContent
-                                    )
-                                  }
-                                  dangerouslySetInnerHTML={{
-                                    __html: task.description || "",
-                                  }}
-                                />
-                              </td>
-                              <td className="task-finished-cell">
-                                <input
-                                  type="checkbox"
-                                  className="editable-checkbox"
-                                  checked={!!task.finished}
-                                  onChange={(e) =>
-                                    updateTask(
-                                      group.id,
-                                      task.id,
-                                      "finished",
-                                      e.target.checked
-                                    )
-                                  }
-                                />
-                              </td>
-                              <td className="task-actions-cell">
-                                <button
-                                  onClick={() => deleteTask(group.id, task.id)}
-                                  className="delete-button"
-                                >
-                                  ✕
-                                </button>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Resumen de horas */}
-          <div className="mb-6">
-            <h3 className="summary-title">Resumen</h3>
-            <div className="summary-items">
-              {summary
-                .filter((item) => item.totalHours > 0)
-                .map((item, index) => (
-                  <div key={index} className="summary-item">
-                    {normalizeShortDate(item.date)}: {item.totalHours} hs.
+                          {normalizeShortDate(item.date)}: {item.totalHours} hs.
+                        </div>
+                      ))}
                   </div>
-                ))}
-            </div>
-          </div>
+                </div>
+              </>
+            )}
+          />
 
           {/* Selector de fecha para nueva tarea */}
           <DatePicker
@@ -747,22 +732,28 @@ export default function TaskTrackingApp() {
         </div>
       </main>
 
-      <div>
-        {/* Botones de acción */}
-        <div className="footer-buttons">
-          <button
-            onClick={() => setShowDatePicker(true)}
-            className="button button-blue"
-          >
-            <Plus size={18} className="mr-1" /> Nuevo
-          </button>
-          <button onClick={clearAllData} className="button button-red">
-            <Trash2 size={18} className="mr-1" /> Limpiar
-          </button>
-          <button onClick={shareData} className="button button-blue">
-            <Share2 size={18} className="mr-1" /> Compartir
-          </button>
-        </div>
+      {/* Botones de acción*/}
+      <div className="footer-buttons">
+        <button
+          onClick={() => setShowDatePicker(true)}
+          className="button button-blue"
+        >
+          <Plus size={18} className="mr-1" /> Nuevo
+        </button>
+        <button onClick={clearAllData} className="button button-red">
+          <Trash2 size={18} className="mr-1" /> Limpiar
+        </button>
+        <button
+          onClick={toggleAllGroupsVisibility} className="button button-gray"
+        >
+          {hiddenGroups.length ? <EyeOff size={20} /> : <Eye size={20} />}
+          {hiddenGroups.length
+                              ? " Mostrar todos"
+                              : " Ocultar completos"}
+        </button>
+        <button onClick={shareData} className="button button-blue">
+          <Share2 size={18} className="mr-1" /> Compartir
+        </button>
       </div>
 
       {/* Mostrar ventana emergente cuando se hace click en el nombre de la aplicación */}
@@ -774,6 +765,23 @@ export default function TaskTrackingApp() {
 
       <footer className="app-footer">
         <p>&copy; {new Date().getFullYear()} JLC Montajes Industriales</p>
+        <a
+          href="https://github.com/Rodolfox22/App-horas-React"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="github-link"
+          aria-label="GitHub"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+          >
+            <path d="M12 .5C5.7.5.5 5.7.5 12c0 5.1 3.3 9.4 7.8 10.9.6.1.8-.2.8-.5v-2c-3.2.7-3.9-1.4-3.9-1.4-.6-1.4-1.3-1.7-1.3-1.7-1.1-.7.1-.7.1-.7 1.2.1 1.9 1.3 1.9 1.3 1 .1 1.6.8 1.6.8.9 1.5 2.3 1 2.9.8.1-.7.4-1 .7-1.2-2.6-.3-5.3-1.3-5.3-5.9 0-1.3.5-2.3 1.2-3.2-.1-.3-.5-1.6.1-3.2 0 0 1-.3 3.3 1.2A11.6 11.6 0 0112 6.3a11.6 11.6 0 012.9.4c2.3-1.5 3.3-1.2 3.3-1.2.6 1.6.2 2.9.1 3.2.8.9 1.2 2 1.2 3.2 0 4.6-2.7 5.6-5.3 5.9.4.3.7.9.7 1.8v2.6c0 .3.2.6.8.5A10.6 10.6 0 0023.5 12C23.5 5.7 18.3.5 12 .5z" />
+          </svg>
+        </a>
       </footer>
     </div>
   );

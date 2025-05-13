@@ -1,11 +1,11 @@
 /* Variables CSS para los anchos de columnas de la tabla */
 :root {
   /* Anchos de columnas */
-  --column-date-width: min(15vw,70px); 
-  --column-hours-width: min(10vw,60px); ;
-  --column-finished-width: min(10vw,60px); 
-  --column-actions-width: min(10vw,60px); 
-  
+  --column-date-width: min(15vw, 70px);
+  --column-hours-width: min(10vw, 60px);
+  --column-finished-width: min(10vw, 60px);
+  --column-actions-width: min(10vw, 60px);
+
   /* Colores */
   --border-color: #e5e7eb;
   --hover-bg-color: #f9fafb;
@@ -385,6 +385,11 @@ body {
   font-size: 0.875rem;
 }
 
+.group-buttons {
+  display: flex;
+  gap: 0.5rem;
+}
+
 .add-task-button {
   display: flex;
   align-items: center;
@@ -425,12 +430,16 @@ body {
 }
 
 .task-finished-cell {
-  width: var(--column-finished-width); /* Ancho fijo para la columna de finalizado */
+  width: var(
+    --column-finished-width
+  ); /* Ancho fijo para la columna de finalizado */
   text-align: center;
 }
 
 .task-actions-cell {
-  width: var(--column-actions-width); /* Ancho fijo para la columna de acciones */
+  width: var(
+    --column-actions-width
+  ); /* Ancho fijo para la columna de acciones */
   text-align: center;
 }
 
@@ -487,6 +496,11 @@ body {
   border-radius: 9999px;
   color: #1e40af;
   font-size: 0.875rem;
+}
+
+.white-bg {
+  background-color: white;
+  border: 1px solid rgba(30, 64, 175, 0.3); 
 }
 
 /* Date picker */
@@ -570,6 +584,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
+  position: relative;
 }
 
 .footer-buttons {
@@ -579,4 +594,52 @@ body {
   gap: 1rem;
   margin-bottom: 0.5rem;
   margin-top: 0.5rem;
+}
+
+
+.github-link {
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.github-link svg {
+  width: 24px;
+  height: 24px;
+  color: #1e40af;
+  transition: transform 0.2s;
+}
+
+.github-link:hover svg {
+  transform: scale(1.5);
+}
+
+/* GroupVisibilityManager.css */
+.visibility-manager {
+  margin-bottom: 1rem;
+}
+
+.visibility-toggle-button {
+  background: none;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 4px 8px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+}
+
+.group-visibility-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  margin-right: 8px;
+}
+
+.visibility-toggle-button:hover,
+.group-visibility-button:hover {
+  opacity: 0.8;
 }
