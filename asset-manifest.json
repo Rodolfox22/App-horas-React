@@ -1,15 +1,15 @@
 {
   "files": {
-    "main.css": "/App-horas-React/static/css/main.580b9a6a.css",
-    "main.js": "/App-horas-React/static/js/main.bcf9519e.js",
+    "main.css": "/App-horas-React/static/css/main.28505bbf.css",
+    "main.js": "/App-horas-React/static/js/main.17af92d3.js",
     "static/js/453.e7ac7b8f.chunk.js": "/App-horas-React/static/js/453.e7ac7b8f.chunk.js",
     "index.html": "/App-horas-React/index.html",
-    "main.580b9a6a.css.map": "/App-horas-React/static/css/main.580b9a6a.css.map",
-    "main.bcf9519e.js.map": "/App-horas-React/static/js/main.bcf9519e.js.map",
+    "main.28505bbf.css.map": "/App-horas-React/static/css/main.28505bbf.css.map",
+    "main.17af92d3.js.map": "/App-horas-React/static/js/main.17af92d3.js.map",
     "453.e7ac7b8f.chunk.js.map": "/App-horas-React/static/js/453.e7ac7b8f.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.580b9a6a.css",
-    "static/js/main.bcf9519e.js"
+    "static/css/main.28505bbf.css",
+    "static/js/main.17af92d3.js"
   ]
 }
