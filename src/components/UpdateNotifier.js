@@ -16,7 +16,7 @@ const UpdateNotifier = () => {
       }
     };
 
-    const interval = setInterval(checkVersion, 3600000); // Cada hora
+    const interval = setInterval(checkVersion, 86400000); // Cada día
     return () => clearInterval(interval);
   }, []);
 

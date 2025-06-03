@@ -1,4 +1,5 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+
 // Este componente recibe todas las props necesarias desde el componente padre
 const DatePicker = ({
   showDatePicker,
@@ -13,10 +14,21 @@ const DatePicker = ({
   setNewTaskFinished,
   addNewTask,
 }) => {
+  // NUEVOS ESTADOS para solicitante y notificación
+  const [newTaskPartialDescription, setNewTaskPartialDescription] =
+    useState("");
+  const [newTaskSolicitante, setNewTaskSolicitante] = useState("");
+  const [newTaskNotificacion, setNewTaskNotificacion] = useState("");
+
+  // Estado para controlar cuándo agregar la tarea
+  const [shouldAddTask, setShouldAddTask] = useState(false);
+
   // Referencias para los inputs
   const dateInputRef = useRef(null);
   const timeInputRef = useRef(null);
   const descriptionInputRef = useRef(null);
+  const solicitaInputRef = useRef(null);
+  const notificacionInputRef = useRef(null);
   const checkboxInputRef = useRef(null);
   const addButtonRef = useRef(null);
 
@@ -29,6 +41,14 @@ const DatePicker = ({
       }, 10);
     }
   }, [showDatePicker]);
+
+  // useEffect para agregar la tarea después de actualizar la descripción
+  useEffect(() => {
+    if (shouldAddTask) {
+      addNewTask();
+      setShouldAddTask(false);
+    }
+  }, [newTaskDescription, shouldAddTask, addNewTask]);
 
   // Manejador de teclas para navegación entre campos
   const handleKeyDown = (e, currentField) => {
@@ -46,16 +66,21 @@ const DatePicker = ({
           checkboxInputRef.current.focus();
           break;
         case "checkbox":
+          solicitaInputRef.current.focus();
+          break;
+        case "solicita":
+          notificacionInputRef.current.focus();
+          break;
+        case "notificacion":
           addButtonRef.current.focus();
           break;
         case "addButton":
-          addNewTask();
+          handleAddTask();
           break;
         default:
           break;
       }
     } else if (e.key === "Escape") {
-      // Cancelar si se presiona Esc
       setShowDatePicker(false);
     }
   };
@@ -75,11 +100,26 @@ const DatePicker = ({
     }
   };
 
+  // Combina los textos y llama a addNewTask
+  const handleAddTask = () => {
+    const descripcionCompleta = `${newTaskPartialDescription}${
+      newTaskSolicitante ? ". Solicita: " + newTaskSolicitante : ""
+    }${
+      newTaskNotificacion ? ". Notificación: " + newTaskNotificacion : ""
+    }`.trim();
+
+    console.log("Creando descripcion:");
+
+    setNewTaskDescription(descripcionCompleta);
+    setShouldAddTask(true);
+  };
+
   if (!showDatePicker) return null;
 
   return (
     <div className="date-picker">
       <h3 className="date-picker-title">Nuevo trabajo</h3>
+
       <div className="input-group">
         <input
           className="date-input"
@@ -107,8 +147,8 @@ const DatePicker = ({
           className="date-input"
           ref={descriptionInputRef}
           type="text"
-          value={newTaskDescription || ""}
-          onChange={(e) => setNewTaskDescription(e.target.value)}
+          value={newTaskPartialDescription || ""}
+          onChange={(e) => setNewTaskPartialDescription(e.target.value)}
           onFocus={handleInputFocus}
           onKeyDown={(e) => handleKeyDown(e, "description")}
           placeholder="Descripción"
@@ -127,11 +167,34 @@ const DatePicker = ({
         </label>
       </div>
 
+      <div className="input-group">
+        <input
+          className="date-input"
+          ref={solicitaInputRef}
+          type="text"
+          value={newTaskSolicitante}
+          onChange={(e) => setNewTaskSolicitante(e.target.value)}
+          onFocus={handleInputFocus}
+          onKeyDown={(e) => handleKeyDown(e, "solicita")}
+          placeholder="Solicitante"
+        />
+        <input
+          className="date-input"
+          ref={notificacionInputRef}
+          type="text"
+          value={newTaskNotificacion}
+          onChange={(e) => setNewTaskNotificacion(e.target.value)}
+          onFocus={handleInputFocus}
+          onKeyDown={(e) => handleKeyDown(e, "notificacion")}
+          placeholder="Número de notificación"
+        />
+      </div>
+
       <div className="button-group">
         <button
           className="button button-blue"
           ref={addButtonRef}
-          onClick={addNewTask}
+          onClick={handleAddTask}
           onKeyDown={(e) => handleKeyDown(e, "addButton")}
         >
           Agregar
