@@ -16,6 +16,7 @@ import {
 import VersionInfo from "./components/VersionInfo";
 import { SelectContentEditable } from "./components/InputManager";
 import FileMergeComponent from "./components/FileMerge";
+import { copyClipboard } from "./utils/CopyClipboard";
 
 export default function TaskTrackingApp() {
   // Estados de autenticación
@@ -284,18 +285,6 @@ export default function TaskTrackingApp() {
     }
   };
 
-  // Copiar al portapapeles (PC o móvil sin Web Share API)
-  const copyClipboard = (text) => {
-    navigator.clipboard
-      .writeText(text)
-      .then(() => {
-        if (!isMobile()) {
-          alert("Datos copiados al portapapeles");
-        }
-      })
-      .catch((err) => alert("Error al copiar datos: " + err));
-  };
-
   // Función para compartir datos
   const shareData = () => {
     let text = "";
@@ -320,7 +309,9 @@ export default function TaskTrackingApp() {
       }
     });
 
-    copyClipboard(text);
+    copyClipboard(text, () => {
+      if (!isMobile()) alert("¡Copiado con éxito!");
+    });
     if (isMobile() && navigator.share) {
       return shareMobileData(text);
     }
@@ -598,9 +589,10 @@ export default function TaskTrackingApp() {
                                 <div className="flex items-center">
                                   <div className="group-date">
                                     {normalizeToDDMMYYYY(group.date)}
-                                    <span >
+                                    <span>
                                       {"   -   "}
-                                      {totalHours} hs. - {group.tasks.length} tarea{group.tasks.length === 1 ? '' : 's'}
+                                      {totalHours} hs. - {group.tasks.length}{" "}
+                                      tarea{group.tasks.length === 1 ? "" : "s"}
                                     </span>
                                   </div>
                                 </div>

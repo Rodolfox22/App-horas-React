@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect } from "react";
+import { copyClipboard } from "../utils/CopyClipboard";
 
 // Componente para unir archivos
-const FileMergeComponent = ({ onClose , TAG_RESUMEN="\n\n"}) => {
+const FileMergeComponent = ({ onClose, TAG_RESUMEN = "\n\n" }) => {
   const [droppedFiles, setDroppedFiles] = useState([]);
   const [textoCompleto, setTextoCompleto] = useState("");
   const [showDropZone, setShowDropZone] = useState(true);
@@ -38,32 +39,50 @@ const FileMergeComponent = ({ onClose , TAG_RESUMEN="\n\n"}) => {
   };
 
   // Manejador para el evento drop
-  const handleDrop = (e) => {
+  const handleDrop = async (e) => {
     e.preventDefault();
-    const files = e.dataTransfer.files;
+    const files = Array.from(e.dataTransfer.files);
     setShowDropZone(false);
     setShowFileList(true);
 
-    // Procesar cada archivo
-    Array.from(files).forEach((file) => {
-      setDroppedFiles((prevFiles) => [
-        ...prevFiles,
-        { id: Date.now() + Math.random(), name: file.name },
-      ]);
+    // Agregar archivos a la lista mostrada
+    setDroppedFiles((prevFiles) => [
+      ...prevFiles,
+      ...files.map((file) => ({
+        id: Date.now() + Math.random(), // Generar un ID único
+        name: file.name,
+      })),
+    ]);
 
+    // Leer y procesar archivos
+    const texto = await procesarArchivos(files);
+    setTextoCompleto(texto);
+    console.log("Texto completo procesado:", texto);
+  };
+
+  // Función auxiliar para leer y filtrar archivos
+  const procesarArchivos = async (files) => {
+    let textoAcumulado = "";
+
+    for (const file of files) {
+      const contenido = await leerArchivoComoTexto(file);
+      const filtrado = contenido.split(TAG_RESUMEN);
+      if (filtrado.length === 2) {
+        textoAcumulado += filtrado[0] + "\n";
+      } else {
+        console.log(`Archivo ${file.name}: no contiene la etiqueta esperada.`);
+      }
+    }
+
+    return textoAcumulado;
+  };
+
+  // Función que devuelve una promesa para leer archivos
+  const leerArchivoComoTexto = (file) => {
+    return new Promise((resolve, reject) => {
       const reader = new FileReader();
-      reader.onload = function (e) {
-        const contenido = e.target.result;
-        const filtrado = contenido.split(TAG_RESUMEN);
-
-        if (filtrado.length === 2) {
-          console.log("Correcto!");
-          setTextoCompleto((prevTexto) => prevTexto + filtrado[0] + "\n");
-        } else {
-          console.log("Que pato");
-        }
-      };
-
+      reader.onload = (e) => resolve(e.target.result);
+      reader.onerror = (e) => reject(e);
       reader.readAsText(file);
     });
   };
@@ -71,9 +90,7 @@ const FileMergeComponent = ({ onClose , TAG_RESUMEN="\n\n"}) => {
   // Renderiza el componente de unir archivos
   return (
     <div className="file-merge-container">
-      <h1 className="file-merge-header">
-        Unir Archivos
-      </h1>
+      <h1 className="file-merge-header">Unir Archivos</h1>
 
       <div className="file-merge-content">
         {showDropZone && (
@@ -96,7 +113,7 @@ const FileMergeComponent = ({ onClose , TAG_RESUMEN="\n\n"}) => {
             </ul>
 
             {textoCompleto && (
-              <div style={{ marginTop: "20px" }}>
+              <div>
                 <h3>Resultado:</h3>
                 <div className="TextoCompleto">
                   <p>Archivos copiados correctamente.</p>
@@ -111,7 +128,12 @@ const FileMergeComponent = ({ onClose , TAG_RESUMEN="\n\n"}) => {
         <button
           id="volver"
           ref={volverBtnRef}
-          onClick={onClose}
+          onClick={() => {
+            copyClipboard(textoCompleto, () => {
+              alert("Texto copiado al portapapeles");
+              onClose(); // Solo cierra cuando se copia
+            });
+          }}
           className="button-red"
         >
           Volver
