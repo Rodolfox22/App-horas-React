@@ -14,6 +14,8 @@ import {
   useGroupVisibility,
 } from "./components/GroupVisibilityManager";
 import VersionInfo from "./components/VersionInfo";
+import { SelectContentEditable } from "./components/InputManager";
+import FileMergeComponent from "./components/FileMerge";
 
 export default function TaskTrackingApp() {
   // Estados de autenticación
@@ -43,8 +45,12 @@ export default function TaskTrackingApp() {
     toggleGroupVisibility,
   } = useGroupVisibility([], taskGroups);
 
+  // Apartado de carga de archivos
+  const [showFileMerger, setShowFileMerger] = useState(false);
+
   const userInputRef = useRef(null);
 
+  const tagResumen = "\n\nResumen:\n";
   // Focus user input when not logged in
   useEffect(() => {
     if (!isLoggedIn && userInputRef.current) {
@@ -307,7 +313,7 @@ export default function TaskTrackingApp() {
         }
       });
     });
-    text += `\nResumen de horas:\n`;
+    text += tagResumen;
     summary.forEach((item) => {
       if (item.totalHours > 0) {
         text += `${normalizeShortDate(item.date)}: ${item.totalHours} hs.\n`;
@@ -445,41 +451,69 @@ export default function TaskTrackingApp() {
     return (
       <div className="login-container">
         <div className="login-box">
-          <div className="login-header">
-            <h1 className="login-title">
-              <span className="app-title-red">JLC</span>{" "}
-              <span className="app-title-blue">Montajes industriales</span>
-            </h1>
-            <p className="login-subtitle">Sistema de Registro de Tareas</p>
-          </div>
+          {!showFileMerger && (
+            <>
+              <div className="login-header">
+                <h1 className="login-title">
+                  <span
+                    className="app-title-red"
+                    onClick={() => setShowFileMerger(true)}
+                    role="button"
+                  >
+                    JLC
+                  </span>{" "}
+                  <span className="app-title-blue">Montajes industriales</span>
+                </h1>
+                <p className="login-subtitle">Sistema de Registro de Tareas</p>
+              </div>
 
-          <div className="login-form">
-            <input
-              ref={userInputRef}
-              type="text"
-              id="userName"
-              className="login-input"
-              value={userName}
-              onChange={(e) => setUserName(e.target.value)}
-              placeholder="Ingrese su nombre"
-              list="usersJLC"
-              name="userName"
-              autoComplete="on"
-            />
-            <datalist id="usersJLC">
-              {existingUsers.map((user, index) => (
-                <option key={index} value={user} />
-              ))}
-            </datalist>
-          </div>
+              <div className="login-form">
+                <input
+                  ref={userInputRef}
+                  type="text"
+                  id="userName"
+                  className="login-input"
+                  value={userName}
+                  onChange={(e) => setUserName(e.target.value)}
+                  placeholder="Ingrese su nombre"
+                  list="usersJLC"
+                  name="userName"
+                  autoComplete="on"
+                />
+                <datalist id="usersJLC">
+                  {existingUsers.map((user, index) => (
+                    <option key={index} value={user} />
+                  ))}
+                </datalist>
+              </div>
 
-          <button
-            onClick={handleLogin}
-            className="login-button"
-            disabled={!userName.trim()}
-          >
-            Ingresar
-          </button>
+              <button
+                onClick={handleLogin}
+                className="login-button"
+                disabled={!userName.trim()}
+              >
+                Ingresar
+              </button>
+            </>
+          )}
+
+          {showFileMerger && (
+            <div
+              style={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                backgroundColor: "rgba(255,255,255,0.95)",
+                width: "100%",
+                height: "100%",
+                zIndex: 10,
+                padding: "20px",
+                borderRadius: "8px",
+              }}
+            >
+              <FileMergeComponent onClose={() => setShowFileMerger(false)} />
+            </div>
+          )}
         </div>
       </div>
     );
@@ -492,15 +526,14 @@ export default function TaskTrackingApp() {
         <div className="header-content">
           <h1 className="app-title">
             <span
-              className="app-title app-title-red app-title-header"
+              className="app-title app-title-red"
               onClick={() => setShowTaskHeader(true)}
-              style={{ cursor: "pointer" }}
               role="button"
               tabIndex={0}
             >
               JLC
             </span>{" "}
-            <span className="app-title app-title-blue app-title-header">
+            <span className="app-title app-title-blue">
               Montajes Industriales
             </span>
           </h1>
@@ -565,9 +598,9 @@ export default function TaskTrackingApp() {
                                 <div className="flex items-center">
                                   <div className="group-date">
                                     {normalizeToDDMMYYYY(group.date)}
-                                    <span className="text-sm text-gray-500">
+                                    <span >
                                       {"   -   "}
-                                      {`${totalHours} hs.  -  ${group.tasks.length} tareas`}
+                                      {totalHours} hs. - {group.tasks.length} tarea{group.tasks.length === 1 ? '' : 's'}
                                     </span>
                                   </div>
                                 </div>
@@ -635,6 +668,9 @@ export default function TaskTrackingApp() {
                                                 e.target.textContent
                                               )
                                             }
+                                            onFocus={(e) =>
+                                              SelectContentEditable(e.target)
+                                            }
                                             dangerouslySetInnerHTML={{
                                               __html: task.hours || "",
                                             }}
@@ -652,6 +688,9 @@ export default function TaskTrackingApp() {
                                                 "description",
                                                 e.target.textContent
                                               )
+                                            }
+                                            onFocus={(e) =>
+                                              SelectContentEditable(e.target)
                                             }
                                             dangerouslySetInnerHTML={{
                                               __html: task.description || "",

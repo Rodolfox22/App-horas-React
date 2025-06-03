@@ -7,5 +7,4 @@ export const defaultUsers = [
   "Jorge",
   "Maxi",
   "Pablo",
-  "Santiago",
 ];

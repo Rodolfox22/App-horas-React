@@ -14,44 +14,11 @@
   --header-border-color: #3b82f6;
 }
 
-.App {
-  text-align: center;
-}
-
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
-}
-
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
-}
-
-.App-link {
-  color: #61dafb;
-}
-
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
+@import "./components/DatePicker.css";
+@import "./components/FileMerge.css";
+@import "./components/GroupVisibilityManager.css";
+@import "./components/InputManager.css";
+@import "./components/VersionInfo.css";
 
 /* Estilos generales */
 body {
@@ -74,17 +41,18 @@ body {
 /* Header */
 .app-header {
   flex: 0 0 auto;
-  width: 95vw;
+  width: 98vw;
   background-color: white;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  padding: 1rem;
+  padding: min(2vh, 3%);
+  margin-right: 0 auto;
   height: min(14vh, 8%);
   z-index: 10;
   right: 5%;
 }
 
 .header-content {
-  width: 95vw;
+  width: 100%;
   max-height: 100%;
   margin: 0 auto;
   display: flex;
@@ -104,6 +72,7 @@ body {
 .app-title-red {
   font-size: 3em;
   color: #dc2626;
+  cursor: pointer;
 }
 
 .app-title-blue {
@@ -198,6 +167,7 @@ body {
   border-radius: 0.5rem;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   padding: 1rem;
+  position: relative;
 }
 
 .login-header {
@@ -260,12 +230,11 @@ body {
 /* Main content */
 .main-content {
   flex-grow: 1;
-  width: 90vw;
+  width: 98vw;
   margin: 0 auto;
   padding: 0.5rem;
   flex: 1 1 auto;
   overflow-y: auto;
-  padding: 1rem;
   background-color: #fff;
 }
 
@@ -279,7 +248,7 @@ body {
   background-color: white;
   border-radius: 0.5rem;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  padding: 0.5rem;
+  padding: 0.2rem;
   margin-bottom: 0.5rem;
 }
 
@@ -371,10 +340,6 @@ body {
   font-weight: 500;
 }
 
-.group-row {
-  cursor: move;
-}
-
 .group-row:hover {
   background-color: var(--hover-bg-color);
 }
@@ -420,10 +385,6 @@ body {
 
 .add-task-button:hover {
   background-color: var(--focus-bg-color);
-}
-
-.task-row {
-  cursor: move;
 }
 
 .task-row:hover {
@@ -520,76 +481,6 @@ body {
 .white-bg {
   background-color: white;
   border: 1px solid rgba(30, 64, 175, 0.3);
-}
-
-/* Date picker */
-.date-picker {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  margin-bottom: 1rem;
-  padding: 1rem;
-  border: 1px solid var(--border-color);
-  border-radius: 0.5rem;
-  background-color: var(--hover-bg-color);
-  max-width: 500px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.date-picker-title {
-  font-size: 1.25rem;
-  font-weight: 600;
-  margin-bottom: 0.5rem;
-}
-
-.date-picker-controls {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.input-group {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-}
-
-.date-input {
-  flex: 1 1 150px;
-  min-width: 100px;
-  padding: 0.5rem 0.75rem;
-  border: 1px solid #d1d5db;
-  border-radius: 0.375rem;
-  outline: none;
-  background-color: #fff;
-}
-
-.date-input:focus {
-  border-color: var(--header-border-color);
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
-}
-
-.date-responsive-input {
-  max-width: 100px;
-  min-width: 10px;
-}
-
-.checkbox-label {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  font-size: 0.875rem;
-}
-
-.checkbox-input {
-  width: 1rem;
-  height: 1rem;
-}
-
-.button-group {
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.5rem;
-  flex-wrap: wrap;
 }
 
 /* Footer */

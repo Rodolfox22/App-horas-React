@@ -1,0 +1,27 @@
+#visibility-manager {
+  margin-bottom: 1rem;
+}
+
+.visibility-toggle-button {
+  background: none;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 4px 8px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+}
+
+.group-visibility-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  margin-right: 8px;
+}
+
+.visibility-toggle-button:hover,
+.group-visibility-button:hover {
+  opacity: 0.8;
+}

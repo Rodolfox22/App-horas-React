@@ -60,6 +60,21 @@ const DatePicker = ({
     }
   };
 
+  const handleInputFocus = (event) => {
+    const selectableTypes = [
+      "text",
+      "date",
+      "number",
+      "email",
+      "password",
+      "url",
+      "tel",
+    ];
+    if (selectableTypes.includes(event.target.type)) {
+      event.target.select();
+    }
+  };
+
   if (!showDatePicker) return null;
 
   return (
@@ -67,18 +82,20 @@ const DatePicker = ({
       <h3 className="date-picker-title">Nuevo trabajo</h3>
       <div className="input-group">
         <input
+          className="date-input"
           ref={dateInputRef}
           type="date"
-          value={newTaskDate||""}
+          value={newTaskDate || ""}
           onChange={(e) => setNewTaskDate(e.target.value)}
+          onFocus={handleInputFocus}
           onKeyDown={(e) => handleKeyDown(e, "date")}
-          className="date-input"
         />
         <input
           ref={timeInputRef}
           type="number"
-          value={newTaskTime||""}
+          value={newTaskTime || ""}
           onChange={(e) => setNewTaskTime(e.target.value)}
+          onFocus={handleInputFocus}
           onKeyDown={(e) => handleKeyDown(e, "time")}
           className="date-input"
           placeholder="Horas"
@@ -87,22 +104,24 @@ const DatePicker = ({
 
       <div className="input-group">
         <input
+          className="date-input"
           ref={descriptionInputRef}
           type="text"
-          value={newTaskDescription||""}
+          value={newTaskDescription || ""}
           onChange={(e) => setNewTaskDescription(e.target.value)}
+          onFocus={handleInputFocus}
           onKeyDown={(e) => handleKeyDown(e, "description")}
-          className="date-input"
           placeholder="Descripción"
         />
         <label className="checkbox-label">
           <input
+            className="checkbox-input"
             ref={checkboxInputRef}
             type="checkbox"
             checked={!!newTaskFinished}
             onChange={(e) => setNewTaskFinished(e.target.checked)}
+            onFocus={handleInputFocus}
             onKeyDown={(e) => handleKeyDown(e, "checkbox")}
-            className="checkbox-input"
           />
           Finalizado
         </label>
@@ -110,10 +129,10 @@ const DatePicker = ({
 
       <div className="button-group">
         <button
+          className="button button-blue"
           ref={addButtonRef}
           onClick={addNewTask}
           onKeyDown={(e) => handleKeyDown(e, "addButton")}
-          className="button button-blue"
         >
           Agregar
         </button>
