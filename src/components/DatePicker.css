@@ -1,7 +1,14 @@
-
 .date-picker {
   display: flex;
   flex-direction: column;
+  /*Centrado en la pagina*/
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  /*Tamaño y posición*/
+  width: 90%;
+  max-width: 500px;
   gap: 1rem;
   margin-bottom: 1rem;
   padding: 1rem;
@@ -44,6 +51,10 @@
   box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
 }
 
+.time-input{
+  max-width: 8%;
+}
+
 .date-responsive-input {
   max-width: 100px;
   min-width: 10px;
@@ -67,4 +78,3 @@
   gap: 0.5rem;
   flex-wrap: wrap;
 }
-

@@ -1,6 +1,6 @@
 import React, { useRef, useEffect } from "react";
 
-function InpuSelect({ inputType = "text", autofocus = false, ...props }) {
+function InputSelect({ inputType = "text", autofocus = false, ...props }) {
   const inputRef = useRef(null);
   const handleFocus = (event) => {
     if (
@@ -21,14 +21,4 @@ function InpuSelect({ inputType = "text", autofocus = false, ...props }) {
   );
 }
 
-export default InpuSelect;
-
-function SelectContentEditable(element) {
-  const range = document.createRange();
-  range.selectNodeContents(element);
-  const selection = window.getSelection();
-  selection.removeAllRanges();
-  selection.addRange(range);
-}
-
-export { SelectContentEditable };
+export default InputSelect;

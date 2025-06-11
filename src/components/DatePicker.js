@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useEnterNavigation } from "../utils/KeyboardNavigation";
 
 // Este componente recibe todas las props necesarias desde el componente padre
 const DatePicker = ({
@@ -14,11 +15,12 @@ const DatePicker = ({
   setNewTaskFinished,
   addNewTask,
 }) => {
-  // NUEVOS ESTADOS para solicitante y notificación
+  // Estados para generar descripcion
   const [newTaskPartialDescription, setNewTaskPartialDescription] =
     useState("");
-  const [newTaskSolicitante, setNewTaskSolicitante] = useState("");
-  const [newTaskNotificacion, setNewTaskNotificacion] = useState("");
+  const [newTaskrequester, setNewTaskSolicitante] = useState("");
+  const [newTaskNotification, setNewTaskNotification] = useState("");
+  const [newTaskMaterials, setNewTaskMaterials] = useState("");
 
   // Estado para controlar cuándo agregar la tarea
   const [shouldAddTask, setShouldAddTask] = useState(false);
@@ -27,9 +29,10 @@ const DatePicker = ({
   const dateInputRef = useRef(null);
   const timeInputRef = useRef(null);
   const descriptionInputRef = useRef(null);
-  const solicitaInputRef = useRef(null);
+  const requestJobInputRef = useRef(null);
   const notificacionInputRef = useRef(null);
   const checkboxInputRef = useRef(null);
+  const materialInputRef = useRef(null);
   const addButtonRef = useRef(null);
 
   // Efecto para enfocar el campo de horas cuando se abre el selector
@@ -50,40 +53,34 @@ const DatePicker = ({
     }
   }, [newTaskDescription, shouldAddTask, addNewTask]);
 
-  // Manejador de teclas para navegación entre campos
-  const handleKeyDown = (e, currentField) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      // Navegar al siguiente campo
-      switch (currentField) {
-        case "date":
-          timeInputRef.current.focus();
-          break;
-        case "time":
-          descriptionInputRef.current.focus();
-          break;
-        case "description":
-          checkboxInputRef.current.focus();
-          break;
-        case "checkbox":
-          solicitaInputRef.current.focus();
-          break;
-        case "solicita":
-          notificacionInputRef.current.focus();
-          break;
-        case "notificacion":
-          addButtonRef.current.focus();
-          break;
-        case "addButton":
-          handleAddTask();
-          break;
-        default:
-          break;
-      }
-    } else if (e.key === "Escape") {
-      setShowDatePicker(false);
-    }
+  // Combina los textos y llama a addNewTask
+  const handleAddTask = () => {
+    const descripcionCompleta = `${newTaskPartialDescription}${
+      newTaskrequester ? ". Solicita: " + newTaskrequester : ""
+    }${newTaskNotification ? ". Notificación: " + newTaskNotification : ""}${
+      newTaskMaterials ? ". Materiales: " + newTaskMaterials : ""
+    }`;
+
+    console.log("Creando descripcion");
+
+    setNewTaskDescription(descripcionCompleta);
+    setShouldAddTask(true);
   };
+
+  // Manejador de teclas para navegación entre campos
+  const handleKeyDown = useEnterNavigation({
+    navigation: {
+      date: timeInputRef,
+      time: descriptionInputRef,
+      description: checkboxInputRef,
+      checkbox: requestJobInputRef,
+      requestJob: notificacionInputRef,
+      notificacion: materialInputRef,
+      materials: addButtonRef,
+      addButton: handleAddTask,
+    },
+    onEscape: () => setShowDatePicker(false),
+  });
 
   const handleInputFocus = (event) => {
     const selectableTypes = [
@@ -98,20 +95,6 @@ const DatePicker = ({
     if (selectableTypes.includes(event.target.type)) {
       event.target.select();
     }
-  };
-
-  // Combina los textos y llama a addNewTask
-  const handleAddTask = () => {
-    const descripcionCompleta = `${newTaskPartialDescription}${
-      newTaskSolicitante ? ". Solicita: " + newTaskSolicitante : ""
-    }${
-      newTaskNotificacion ? ". Notificación: " + newTaskNotificacion : ""
-    }`.trim();
-
-    console.log("Creando descripcion:");
-
-    setNewTaskDescription(descripcionCompleta);
-    setShouldAddTask(true);
   };
 
   if (!showDatePicker) return null;
@@ -137,7 +120,7 @@ const DatePicker = ({
           onChange={(e) => setNewTaskTime(e.target.value)}
           onFocus={handleInputFocus}
           onKeyDown={(e) => handleKeyDown(e, "time")}
-          className="date-input"
+          className="date-input time-input"
           placeholder="Horas"
         />
       </div>
@@ -170,23 +153,35 @@ const DatePicker = ({
       <div className="input-group">
         <input
           className="date-input"
-          ref={solicitaInputRef}
+          ref={requestJobInputRef}
           type="text"
-          value={newTaskSolicitante}
+          value={newTaskrequester}
           onChange={(e) => setNewTaskSolicitante(e.target.value)}
           onFocus={handleInputFocus}
-          onKeyDown={(e) => handleKeyDown(e, "solicita")}
-          placeholder="Solicitante"
+          onKeyDown={(e) => handleKeyDown(e, "requestJob")}
+          placeholder="Solicitante (opcional"
         />
         <input
           className="date-input"
           ref={notificacionInputRef}
           type="text"
-          value={newTaskNotificacion}
-          onChange={(e) => setNewTaskNotificacion(e.target.value)}
+          value={newTaskNotification}
+          onChange={(e) => setNewTaskNotification(e.target.value)}
           onFocus={handleInputFocus}
           onKeyDown={(e) => handleKeyDown(e, "notificacion")}
-          placeholder="Número de notificación"
+          placeholder="Número de notificación (opcional)"
+        />
+      </div>
+      <div className="input-group">
+        <input
+          className="date-input"
+          ref={materialInputRef}
+          type="text"
+          value={newTaskMaterials}
+          onChange={(e) => setNewTaskMaterials(e.target.value)}
+          onFocus={handleInputFocus}
+          onKeyDown={(e) => handleKeyDown(e, "materials")}
+          placeholder="Materiales (opcional)"
         />
       </div>
 

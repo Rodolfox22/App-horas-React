@@ -1,22 +1,38 @@
 import { useState, useEffect, useRef } from "react";
-import { Plus, FileUp, Share2, Trash2, X, Eye, EyeOff } from "lucide-react";
-import "./App.css";
-import DatePicker from "./components/DatePicker";
 import {
-  normalizeShortDate,
-  normalizeToDDMMYYYY,
-  getCurrentDate,
-} from "./utils/DateFormat";
-import { taskDataKey, getUsersKey, defaultUsers } from "./utils/constants";
+  Plus,
+  FileUp,
+  Share2,
+  Trash2,
+  X,
+  Eye,
+  EyeOff,
+  CalendarRange,
+  CalendarCheck,
+} from "lucide-react";
+
+// Componentes
+import DatePicker from "./components/DatePicker";
 import FileUploader from "./components/FileUploader";
 import {
   GroupVisibilityManager,
   useGroupVisibility,
 } from "./components/GroupVisibilityManager";
 import VersionInfo from "./components/VersionInfo";
-import { SelectContentEditable } from "./components/InputManager";
 import FileMergeComponent from "./components/FileMerge";
+
+// Utils
+import {
+  normalizeShortDate,
+  normalizeToDDMMYYYY,
+  getCurrentDate,
+} from "./utils/DateFormat";
+import { taskDataKey, getUsersKey, defaultUsers } from "./utils/constants";
 import { copyClipboard } from "./utils/CopyClipboard";
+import { SelectContentEditable } from "./utils/DomUtils";
+import { useKeyboardNavigation } from "./utils/KeyboardNavigation";
+
+import "./App.css";
 
 export default function TaskTrackingApp() {
   // Estados de autenticación
@@ -49,7 +65,12 @@ export default function TaskTrackingApp() {
   // Apartado de carga de archivos
   const [showFileMerger, setShowFileMerger] = useState(false);
 
+  // Referencias para los inputs
   const userInputRef = useRef(null);
+  const newInputRef = useRef(null);
+  const hideInputRef = useRef(null);
+  const clearInputRef = useRef(null);
+  const shareInputRef = useRef(null);
 
   const tagResumen = "\n\nResumen:\n";
   // Focus user input when not logged in
@@ -93,6 +114,44 @@ export default function TaskTrackingApp() {
       calculateSummary(taskGroups);
     }
   }, [taskGroups, isLoggedIn, userName]);
+
+  // Manejador de teclas para navegación entre campos
+  const handleKeyDown = useKeyboardNavigation({
+    navigation: {
+      newButton: () => setShowDatePicker(true),
+      clear: () => clearAllData(),
+    },
+    altKeyHandler: {
+      n: (e) => {
+        setShowDatePicker(true);
+      },
+      l: (e) => {
+        clearAllData();
+      },
+      o: (e) => {
+        toggleAllGroupsVisibility();
+      },
+      c: (e) => {
+        shareData();
+      },
+      s: (e) => {
+        exportToJson();
+      },
+    },
+  });
+
+  useEffect(() => {
+    const handleGlobalKeyDown = (e) => {
+      // Usa el handler devuelto por useKeyboardNavigation
+      handleKeyDown(e, "global");
+    };
+
+    document.addEventListener("keydown", handleGlobalKeyDown);
+
+    return () => {
+      document.removeEventListener("keydown", handleGlobalKeyDown);
+    };
+  }, [handleKeyDown]);
 
   // Formateo de nombre de usuario
   const formatUserName = (name) => {
@@ -292,8 +351,9 @@ export default function TaskTrackingApp() {
     taskGroups.forEach((group) => {
       group.tasks.forEach((task) => {
         let finishedText = "";
-        if (task.finished === "true") {
+        if (task.finished === true) {
           finishedText = ". Completo.";
+          console.log("e finito");
         }
         if (task.hours || task.description) {
           text += `${normalizeShortDate(group.date)}\t${task.hours}\t${
@@ -489,19 +549,7 @@ export default function TaskTrackingApp() {
           )}
 
           {showFileMerger && (
-            <div
-              style={{
-                position: "absolute",
-                top: 0,
-                left: 0,
-                backgroundColor: "rgba(255,255,255,0.95)",
-                width: "100%",
-                height: "100%",
-                zIndex: 10,
-                padding: "20px",
-                borderRadius: "8px",
-              }}
-            >
+            <div className="file-merger-popup">
               <FileMergeComponent onClose={() => setShowFileMerger(false)} />
             </div>
           )}
@@ -619,7 +667,9 @@ export default function TaskTrackingApp() {
                                   </button>
                                 </div>
                               </div>
-
+                              {/*
+TODO: Implementar navegación con Enter en el grupo
+                              */}
                               {!groupVisibility[group.id] && (
                                 <table className="task-table">
                                   <tbody>
@@ -769,23 +819,63 @@ export default function TaskTrackingApp() {
       {/* Botones de acción*/}
       <div className="footer-buttons">
         <button
+          ref={newInputRef}
           onClick={() => setShowDatePicker(true)}
           className="button button-blue"
+          title="Alt + N para nueva tarea"
+          onKeyDown={(e) => {
+            handleKeyDown(e, "newButton");
+          }}
         >
-          <Plus size={18} className="mr-1" /> Nuevo
-        </button>
-        <button onClick={clearAllData} className="button button-red">
-          <Trash2 size={18} className="mr-1" /> Limpiar
+          <Plus size={18} className="mr-1" /> <u>N</u>uevo
         </button>
         <button
+          ref={clearInputRef}
+          onClick={clearAllData}
+          title="Alt + L para limpiar datos"
+          onKeyDown={(e) => {
+            handleKeyDown(e, "clear");
+          }}
+          className="button button-red"
+        >
+          <Trash2 size={18} className="mr-1" /> <u>L</u>impiar
+        </button>
+        <button
+          ref={hideInputRef}
           onClick={toggleAllGroupsVisibility}
           className="button button-gray"
+          title="Alt + O para ocultar/mostrar grupos completos"
+          onKeyDown={(e) => {
+            handleKeyDown(e, "toggleVisibility");
+          }}
         >
-          {hiddenGroups.length ? <EyeOff size={20} /> : <Eye size={20} />}
-          {hiddenGroups.length ? " Mostrar todos" : " Ocultar completos"}
+          {hiddenGroups.length ? (
+            <CalendarRange size={20} />
+          ) : (
+            <CalendarCheck size={20} />
+          )}
+          {hiddenGroups.length ? (
+            <span>
+              {" "}
+              M<u>o</u>strar todos
+            </span>
+          ) : (
+            <span>
+              {" "}
+              <u>O</u>cultar completos
+            </span>
+          )}
         </button>
-        <button onClick={shareData} className="button button-blue">
-          <Share2 size={18} className="mr-1" /> Compartir
+        <button
+          ref={shareInputRef}
+          onClick={shareData}
+          className="button button-blue"
+          title="Alt + C para compartir datos"
+          onKeyDown={(e) => {
+            handleKeyDown(e, "share");
+          }}
+        >
+          <Share2 size={18} className="mr-1" /> <u>C</u>ompartir
         </button>
       </div>
 
