@@ -353,7 +353,10 @@ export default function TaskTrackingApp() {
         let finishedText = "";
         if (task.finished === true) {
           finishedText = ". Completo.";
-          console.log("e finito");
+        }
+        //Noralizar horas, si contiene un punto, cambiarlo por coma
+        if (task.hours) {
+          task.hours = task.hours.replace(".", ",");
         }
         if (task.hours || task.description) {
           text += `${normalizeShortDate(group.date)}\t${task.hours}\t${
