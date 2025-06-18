@@ -1,6 +1,6 @@
 {
   "name": "app-horas-jlc",
-  "version": "1.6.2",
+  "version": "1.6.3",
   "private": true,
   "dependencies": {
     "@testing-library/dom": "^10.4.0",
