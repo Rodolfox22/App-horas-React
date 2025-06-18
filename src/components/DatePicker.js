@@ -16,9 +16,10 @@ const DatePicker = ({
   addNewTask,
 }) => {
   // Estados para generar descripcion
+  const [newTaskSector, setNewTaskSector] = useState("");
   const [newTaskPartialDescription, setNewTaskPartialDescription] =
     useState("");
-  const [newTaskrequester, setNewTaskSolicitante] = useState("");
+  const [newTaskRequester, setNewTaskRequester] = useState("");
   const [newTaskNotification, setNewTaskNotification] = useState("");
   const [newTaskMaterials, setNewTaskMaterials] = useState("");
 
@@ -28,9 +29,10 @@ const DatePicker = ({
   // Referencias para los inputs
   const dateInputRef = useRef(null);
   const timeInputRef = useRef(null);
+  const sectorInputRef = useRef(null);
   const descriptionInputRef = useRef(null);
   const requestJobInputRef = useRef(null);
-  const notificacionInputRef = useRef(null);
+  const notificationInputRef = useRef(null);
   const checkboxInputRef = useRef(null);
   const materialInputRef = useRef(null);
   const addButtonRef = useRef(null);
@@ -55,11 +57,11 @@ const DatePicker = ({
 
   // Combina los textos y llama a addNewTask
   const handleAddTask = () => {
-    const descripcionCompleta = `${newTaskPartialDescription}${
-      newTaskrequester ? ". Solicita: " + newTaskrequester : ""
-    }${newTaskNotification ? ". Notificación: " + newTaskNotification : ""}${
-      newTaskMaterials ? ". Materiales: " + newTaskMaterials : ""
-    }`;
+    const descripcionCompleta = `${newTaskPartialDescription.trim()}${
+      newTaskSector ? ". Sector: " + newTaskSector : ""
+    }${newTaskRequester ? ". Solicita: " + newTaskRequester : ""}${
+      newTaskNotification ? ". Notificación: " + newTaskNotification : ""
+    }${newTaskMaterials ? ". Materiales: " + newTaskMaterials : ""}`;
 
     console.log("Creando descripcion");
 
@@ -71,10 +73,11 @@ const DatePicker = ({
   const handleKeyDown = useEnterNavigation({
     navigation: {
       date: timeInputRef,
-      time: descriptionInputRef,
+      time: sectorInputRef,
+      sector: descriptionInputRef,
       description: checkboxInputRef,
       checkbox: requestJobInputRef,
-      requestJob: notificacionInputRef,
+      requestJob: notificationInputRef,
       notificacion: materialInputRef,
       materials: addButtonRef,
       addButton: handleAddTask,
@@ -128,13 +131,13 @@ const DatePicker = ({
       <div className="input-group">
         <input
           className="date-input"
-          ref={descriptionInputRef}
+          ref={sectorInputRef}
           type="text"
-          value={newTaskPartialDescription || ""}
-          onChange={(e) => setNewTaskPartialDescription(e.target.value)}
+          value={newTaskSector || ""}
+          onChange={(e) => setNewTaskSector(e.target.value)}
           onFocus={handleInputFocus}
-          onKeyDown={(e) => handleKeyDown(e, "description")}
-          placeholder="Descripción"
+          onKeyDown={(e) => handleKeyDown(e, "sector")}
+          placeholder="Sector"
         />
         <label className="checkbox-label">
           <input
@@ -149,21 +152,32 @@ const DatePicker = ({
           Finalizado
         </label>
       </div>
-
+      <div className="input-group">
+        <input
+          className="date-input"
+          ref={descriptionInputRef}
+          type="text"
+          value={newTaskPartialDescription || ""}
+          onChange={(e) => setNewTaskPartialDescription(e.target.value)}
+          onFocus={handleInputFocus}
+          onKeyDown={(e) => handleKeyDown(e, "description")}
+          placeholder="Descripción"
+        />
+      </div>
       <div className="input-group">
         <input
           className="date-input"
           ref={requestJobInputRef}
           type="text"
-          value={newTaskrequester}
-          onChange={(e) => setNewTaskSolicitante(e.target.value)}
+          value={newTaskRequester}
+          onChange={(e) => setNewTaskRequester(e.target.value)}
           onFocus={handleInputFocus}
           onKeyDown={(e) => handleKeyDown(e, "requestJob")}
-          placeholder="Solicitante (opcional"
+          placeholder="Solicitante (opcional)"
         />
         <input
           className="date-input"
-          ref={notificacionInputRef}
+          ref={notificationInputRef}
           type="text"
           value={newTaskNotification}
           onChange={(e) => setNewTaskNotification(e.target.value)}
