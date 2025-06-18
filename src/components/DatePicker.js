@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useEnterNavigation } from "../utils/KeyboardNavigation";
+import { sectors } from "../utils/constants";
 
 // Este componente recibe todas las props necesarias desde el componente padre
 const DatePicker = ({
@@ -25,6 +26,9 @@ const DatePicker = ({
 
   // Estado para controlar cuándo agregar la tarea
   const [shouldAddTask, setShouldAddTask] = useState(false);
+
+  // Lista de sectores predefinidos
+    const [existingSectors, setExistingSectors] = useState([]);
 
   // Referencias para los inputs
   const dateInputRef = useRef(null);
@@ -54,6 +58,17 @@ const DatePicker = ({
       setShouldAddTask(false);
     }
   }, [newTaskDescription, shouldAddTask, addNewTask]);
+
+  useEffect(() => {
+    // Crear una lista de sectores existentes
+     const storedSectors = JSON.parse(
+          localStorage.getItem("jlcSectors") || "[]"
+        );
+        const mergedSectors = Array.from(
+          new Set([...sectors, ...storedSectors])
+        );    
+        setExistingSectors(mergedSectors);
+  }, []);
 
   // Combina los textos y llama a addNewTask
   const handleAddTask = () => {
@@ -138,7 +153,14 @@ const DatePicker = ({
           onFocus={handleInputFocus}
           onKeyDown={(e) => handleKeyDown(e, "sector")}
           placeholder="Sector"
+          list="sectores"
         />
+        <datalist id="sectores">
+          {existingSectors.map((sector, index) => (
+            <option key={index} value={sector} />
+          ))}
+        </datalist>
+
         <label className="checkbox-label">
           <input
             className="checkbox-input"
