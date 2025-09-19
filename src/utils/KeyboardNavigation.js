@@ -12,7 +12,7 @@ import { useCallback } from "react";
 export const useEnterNavigation = (config = {}) => {
   const { navigation = {}, onEscape, keyHandlers = {} } = config;
 
-  const handleKeyDown = useCallback(
+  return useCallback(
     (e, currentField) => {
       // Manejar tecla Enter
       if (e.key === "Enter") {
@@ -38,8 +38,6 @@ export const useEnterNavigation = (config = {}) => {
     },
     [navigation, onEscape, keyHandlers]
   );
-
-  return handleKeyDown;
 };
 
 // Versión extendida con más funcionalidades
@@ -55,7 +53,8 @@ export const useKeyboardNavigation = (config = {}) => {
     debug = false,
   } = config;
 
-  const handleKeyDown = useCallback(
+  //HandleKeyDown ahora maneja Ctrl y Alt
+  return useCallback(
     (e, currentField) => {
       if (debug) {
         console.log(`Key pressed: ${e.key}, Current field: ${currentField}`);
@@ -65,7 +64,7 @@ export const useKeyboardNavigation = (config = {}) => {
       const isCtrlPressed = e.ctrlKey || e.metaKey; // metaKey para Mac (Cmd)
       // Manejar combinaciones con Ctrl primero
       if (isCtrlPressed && ctrlKeyHandler[e.key]) {
-        if (preventDefault) e.preventDefault();
+        if (preventDefault) {e.preventDefault();}
         ctrlKeyHandler[e.key](e, currentField);
         return; // Salir temprano para evitar otros manejadores
       }
@@ -73,7 +72,7 @@ export const useKeyboardNavigation = (config = {}) => {
       const isAltPressed = e.altKey || e.altGraphKey; // altGraphKey para Mac (Opt)
       // Manejar combinaciones con Alt
       if (isAltPressed && altKeyHandler[e.key]) {
-        if (preventDefault) e.preventDefault();
+        if (preventDefault) {e.preventDefault();}
         altKeyHandler[e.key](e, currentField);
         return; // Salir temprano para evitar otros manejadores
       }
@@ -81,7 +80,7 @@ export const useKeyboardNavigation = (config = {}) => {
       // Si no es una combinación con Ctrl o Alt, continuar con el manejo normal
       switch (e.key) {
         case "Enter":
-          if (preventDefault) e.preventDefault();
+          if (preventDefault) {e.preventDefault();}
 
           if (onEnter) {
             onEnter(e, currentField);
@@ -133,5 +132,4 @@ export const useKeyboardNavigation = (config = {}) => {
     ]
   );
 
-  return handleKeyDown;
 };

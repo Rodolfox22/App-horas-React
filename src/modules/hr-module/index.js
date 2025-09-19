@@ -2,11 +2,11 @@
 // Sistema completo de gestión de personal y RRHH
 
 export const MODULE_INFO = {
-  id: 'hr-module',
-  name: 'Gestión de RRHH',
-  description: 'Sistema completo de gestión de recursos humanos',
-  version: '1.0.0',
-  dependencies: ['user-management', 'reporting']
+  id: "hr-module",
+  name: "Gestión de RRHH",
+  description: "Sistema completo de gestión de recursos humanos",
+  version: "1.0.0",
+  dependencies: ["user-management", "reporting"],
 };
 
 // Funciones del módulo de RRHH
@@ -17,7 +17,7 @@ export const hrFunctions = {
   employeeManagement: {
     // Ficha del empleado
     createEmployeeProfile: (employeeData) => {
-      const profile = {
+      return {
         id: Date.now().toString(),
         personalInfo: {
           name: employeeData.name,
@@ -25,13 +25,12 @@ export const hrFunctions = {
           birthDate: employeeData.birthDate,
           address: employeeData.address,
           phone: employeeData.phone,
-          email: employeeData.email
+          email: employeeData.email,
         },
         documents: employeeData.documents || [],
         createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
+        updatedAt: new Date().toISOString(),
       };
-      return profile;
     },
 
     // Contratación y onboarding
@@ -39,16 +38,16 @@ export const hrFunctions = {
       return {
         id: Date.now().toString(),
         candidate: candidateData,
-        status: 'pending',
+        status: "pending",
         checklists: {
           documents: false,
           backgroundCheck: false,
           medicalExam: false,
-          training: false
+          training: false,
         },
         assignedEquipment: [],
         startDate: candidateData.startDate,
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
       };
     },
 
@@ -58,15 +57,15 @@ export const hrFunctions = {
       const chart = {
         ceo: null,
         managers: [],
-        employees: []
+        employees: [],
       };
 
-      employees.forEach(emp => {
-        switch(emp.position) {
-          case 'CEO':
+      employees.forEach((emp) => {
+        switch (emp.position) {
+          case "CEO":
             chart.ceo = emp;
             break;
-          case 'Manager':
+          case "Manager":
             chart.managers.push(emp);
             break;
           default:
@@ -88,9 +87,9 @@ export const hrFunctions = {
         areasForImprovement: reviewData.areasForImprovement,
         rating: reviewData.rating,
         improvementPlan: reviewData.improvementPlan,
-        reviewedAt: new Date().toISOString()
+        reviewedAt: new Date().toISOString(),
       };
-    }
+    },
   },
 
   // Nóminas y Beneficios
@@ -109,10 +108,13 @@ export const hrFunctions = {
       const deductions = {
         healthInsurance: grossSalary * 0.03,
         retirement: grossSalary * 0.11,
-        taxes: grossSalary * 0.15
+        taxes: grossSalary * 0.15,
       };
 
-      const totalDeductions = Object.values(deductions).reduce((sum, ded) => sum + ded, 0);
+      const totalDeductions = Object.values(deductions).reduce(
+        (sum, ded) => sum + ded,
+        0
+      );
       const netSalary = grossSalary - totalDeductions;
 
       return {
@@ -125,8 +127,8 @@ export const hrFunctions = {
           regularHours: hoursWorked,
           extraHours,
           regularPay,
-          extraPay
-        }
+          extraPay,
+        },
       };
     },
 
@@ -139,9 +141,9 @@ export const hrFunctions = {
           mealAllowance: benefits.mealAllowance || 0,
           transportation: benefits.transportation || 0,
           phoneAllowance: benefits.phoneAllowance || 0,
-          ...benefits
+          ...benefits,
         },
-        updatedAt: new Date().toISOString()
+        updatedAt: new Date().toISOString(),
       };
     },
 
@@ -154,7 +156,7 @@ export const hrFunctions = {
         deductions: payrollData.deductions,
         taxableIncome: payrollData.grossSalary - payrollData.deductions.taxes,
         taxPaid: payrollData.deductions.taxes,
-        generatedAt: new Date().toISOString()
+        generatedAt: new Date().toISOString(),
       };
     },
 
@@ -162,7 +164,7 @@ export const hrFunctions = {
     getSalaryHistory: (employeeId) => {
       // En una implementación real, esto vendría de una base de datos
       return [];
-    }
+    },
   },
 
   // Control de Asistencia
@@ -175,7 +177,7 @@ export const hrFunctions = {
         type, // 'check-in' or 'check-out'
         timestamp: timestamp.toISOString(),
         location: null, // GPS location if available
-        method: 'manual' // manual, biometric, app, gps
+        method: "manual", // manual, biometric, app, gps
       };
     },
 
@@ -187,9 +189,9 @@ export const hrFunctions = {
         startDate: vacationRequest.startDate,
         endDate: vacationRequest.endDate,
         days: vacationRequest.days,
-        status: 'pending', // pending, approved, rejected
+        status: "pending", // pending, approved, rejected
         approvedBy: null,
-        requestedAt: new Date().toISOString()
+        requestedAt: new Date().toISOString(),
       };
     },
 
@@ -197,12 +199,18 @@ export const hrFunctions = {
     setFlexibleSchedule: (employeeId, schedule) => {
       return {
         employeeId,
-        workDays: schedule.workDays || ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'],
-        startTime: schedule.startTime || '07:00',
-        endTime: schedule.endTime || '16:00',
+        workDays: schedule.workDays || [
+          "monday",
+          "tuesday",
+          "wednesday",
+          "thursday",
+          "friday",
+        ],
+        startTime: schedule.startTime || "07:00",
+        endTime: schedule.endTime || "16:00",
         breakTime: schedule.breakTime || 60, // minutos
         flexibleHours: schedule.flexibleHours || false,
-        updatedAt: new Date().toISOString()
+        updatedAt: new Date().toISOString(),
       };
     },
 
@@ -216,10 +224,10 @@ export const hrFunctions = {
         endDate: disabilityData.endDate,
         diagnosis: disabilityData.diagnosis,
         medicalCertificate: disabilityData.medicalCertificate,
-        status: 'active',
-        recordedAt: new Date().toISOString()
+        status: "active",
+        recordedAt: new Date().toISOString(),
       };
-    }
+    },
   },
 
   // Salud y Seguridad Laboral
@@ -232,9 +240,9 @@ export const hrFunctions = {
         type: examData.type, // periodic, pre-employment, return-to-work
         scheduledDate: examData.scheduledDate,
         doctor: examData.doctor,
-        status: 'scheduled',
+        status: "scheduled",
         results: null,
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
       };
     },
 
@@ -242,14 +250,14 @@ export const hrFunctions = {
     assignPPE: (employeeId, ppeItems) => {
       return {
         employeeId,
-        assignedPPE: ppeItems.map(item => ({
+        assignedPPE: ppeItems.map((item) => ({
           id: item.id,
           name: item.name,
           size: item.size,
           assignedDate: new Date().toISOString(),
-          status: 'active'
+          status: "active",
         })),
-        updatedAt: new Date().toISOString()
+        updatedAt: new Date().toISOString(),
       };
     },
 
@@ -265,7 +273,7 @@ export const hrFunctions = {
         witnesses: incidentData.witnesses || [],
         actions: incidentData.actions || [],
         reportedAt: new Date().toISOString(),
-        status: 'investigating'
+        status: "investigating",
       };
     },
 
@@ -278,9 +286,9 @@ export const hrFunctions = {
         applicableRoles: protocolData.applicableRoles,
         steps: protocolData.steps,
         requiredEquipment: protocolData.requiredEquipment,
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
       };
-    }
+    },
   },
 
   // Clima Laboral
@@ -292,9 +300,9 @@ export const hrFunctions = {
         title: surveyData.title,
         questions: surveyData.questions,
         targetEmployees: surveyData.targetEmployees,
-        status: 'active',
+        status: "active",
         responses: [],
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
       };
     },
 
@@ -307,8 +315,8 @@ export const hrFunctions = {
         title: suggestionData.title,
         description: suggestionData.description,
         anonymous: suggestionData.anonymous || false,
-        status: 'pending',
-        submittedAt: new Date().toISOString()
+        status: "pending",
+        submittedAt: new Date().toISOString(),
       };
     },
 
@@ -322,7 +330,7 @@ export const hrFunctions = {
         description: recognitionData.description,
         points: recognitionData.points || 0,
         givenBy: recognitionData.givenBy,
-        givenAt: new Date().toISOString()
+        givenAt: new Date().toISOString(),
       };
     },
 
@@ -334,10 +342,10 @@ export const hrFunctions = {
         content: communicationData.content,
         type: communicationData.type, // announcement, policy-update, event
         targetAudience: communicationData.targetAudience,
-        priority: communicationData.priority || 'normal',
-        createdAt: new Date().toISOString()
+        priority: communicationData.priority || "normal",
+        createdAt: new Date().toISOString(),
       };
-    }
+    },
   },
 
   // Gestión de Técnicos en Campo
@@ -346,14 +354,14 @@ export const hrFunctions = {
     assignTools: (technicianId, tools) => {
       return {
         technicianId,
-        assignedTools: tools.map(tool => ({
+        assignedTools: tools.map((tool) => ({
           id: tool.id,
           name: tool.name,
           serialNumber: tool.serialNumber,
           assignedDate: new Date().toISOString(),
-          condition: 'good'
+          condition: "good",
         })),
-        updatedAt: new Date().toISOString()
+        updatedAt: new Date().toISOString(),
       };
     },
 
@@ -366,24 +374,24 @@ export const hrFunctions = {
         estimatedTime: routeData.estimatedTime,
         efficiency: routeData.efficiency, // percentage
         suggestions: routeData.suggestions,
-        evaluatedAt: new Date().toISOString()
+        evaluatedAt: new Date().toISOString(),
       };
     },
 
     // Gamificación
     updateGamificationScore: (technicianId, action) => {
       const points = {
-        'task-completed': 10,
-        'client-satisfaction': 20,
-        'efficiency-bonus': 15,
-        'safety-compliance': 5
+        "task-completed": 10,
+        "client-satisfaction": 20,
+        "efficiency-bonus": 15,
+        "safety-compliance": 5,
       };
 
       return {
         technicianId,
         action,
         points: points[action] || 0,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
     },
 
@@ -395,11 +403,11 @@ export const hrFunctions = {
         type: supportData.type, // technical, client, emergency
         description: supportData.description,
         location: supportData.location,
-        priority: supportData.priority || 'normal',
-        status: 'open',
-        createdAt: new Date().toISOString()
+        priority: supportData.priority || "normal",
+        status: "open",
+        createdAt: new Date().toISOString(),
       };
-    }
+    },
   },
 
   // Reportes y Analítica
@@ -412,7 +420,7 @@ export const hrFunctions = {
         departures: 0,
         turnoverRate: 0,
         reasons: {},
-        generatedAt: new Date().toISOString()
+        generatedAt: new Date().toISOString(),
       };
     },
 
@@ -427,7 +435,7 @@ export const hrFunctions = {
         equipment: 0,
         totalCost: 0,
         costPerHour: 0,
-        calculatedAt: new Date().toISOString()
+        calculatedAt: new Date().toISOString(),
       };
     },
 
@@ -436,15 +444,16 @@ export const hrFunctions = {
       const analysis = {
         totalEmployees: employees.length,
         gender: { male: 0, female: 0, other: 0 },
-        ageGroups: { '18-25': 0, '26-35': 0, '36-45': 0, '46+': 0 },
+        ageGroups: { "18-25": 0, "26-35": 0, "36-45": 0, "46+": 0 },
         departments: {},
-        analyzedAt: new Date().toISOString()
+        analyzedAt: new Date().toISOString(),
       };
 
-      employees.forEach(emp => {
+      employees.forEach((emp) => {
         // Análisis básico
         analysis.gender[emp.gender] = (analysis.gender[emp.gender] || 0) + 1;
-        analysis.departments[emp.department] = (analysis.departments[emp.department] || 0) + 1;
+        analysis.departments[emp.department] =
+          (analysis.departments[emp.department] || 0) + 1;
       });
 
       return analysis;
@@ -458,15 +467,15 @@ export const hrFunctions = {
         retention: 0, // porcentaje
         satisfaction: 0, // promedio
         productivity: 0, // índice
-        calculatedAt: new Date().toISOString()
+        calculatedAt: new Date().toISOString(),
       };
-    }
-  }
+    },
+  },
 };
 
 export const HRModule = {
-  name: 'HRModule',
-  functions: hrFunctions
+  name: "HRModule",
+  functions: hrFunctions,
 };
 
 export default HRModule;

@@ -59,8 +59,8 @@ import "./App.css";
 
 export default function TaskTrackingApp() {
   // Estados de navegación
-  const [currentView, setCurrentView] = useState('login'); // 'login', 'welcome', 'tasks'
-  const [userRole, setUserRole] = useState(''); // Rol del usuario actual
+  const [currentView, setCurrentView] = useState("login"); // 'login', 'welcome', 'tasks'
+  const [userRole, setUserRole] = useState(""); // Rol del usuario actual
 
   // Estados de autenticación
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -158,7 +158,7 @@ export default function TaskTrackingApp() {
         exportToJsonLocal();
       },
       h: (e) => {
-        setCurrentView('welcome');
+        setCurrentView("welcome");
       },
     },
   });
@@ -184,8 +184,12 @@ export default function TaskTrackingApp() {
 
   // Función para manejar navegación desde el módulo de bienvenida
   const handleNavigate = (view) => {
-    if (view === 'tasks' || view === 'work-orders' || view === 'system-status') {
-      setCurrentView('tasks');
+    if (
+      view === "tasks" ||
+      view === "work-orders" ||
+      view === "system-status"
+    ) {
+      setCurrentView("tasks");
     }
     // Aquí se pueden agregar más vistas en el futuro
   };
@@ -206,7 +210,7 @@ export default function TaskTrackingApp() {
       addUser(formattedName);
 
       setIsLoggedIn(true);
-      setCurrentView('welcome'); // Ir al módulo de bienvenida después del login
+      setCurrentView("welcome"); // Ir al módulo de bienvenida después del login
     }
   };
 
@@ -215,28 +219,44 @@ export default function TaskTrackingApp() {
     setIsLoggedIn(false);
     setUserName("");
     setUserRole("");
-    setCurrentView('login');
+    setCurrentView("login");
   };
 
   // Función para agregar una tarea a un grupo
   const addTaskToGroup = (groupId) => {
-    const group = taskGroups.find(g => g.id === groupId);
+    const group = taskGroups.find((g) => g.id === groupId);
     if (group) {
-      const updatedGroups = addTaskToGroupService(taskGroups, groupId, group.time, group.description, group.date);
+      const updatedGroups = addTaskToGroupService(
+        taskGroups,
+        groupId,
+        group.time,
+        group.description,
+        group.date
+      );
       setTaskGroups(updatedGroups);
     }
   };
 
-
   const addNewTask = () => {
-    const updatedGroups = addTask(taskGroups, newTaskDate, newTaskTime, newTaskDescription, newTaskFinished);
+    const updatedGroups = addTask(
+      taskGroups,
+      newTaskDate,
+      newTaskTime,
+      newTaskDescription,
+      newTaskFinished
+    );
     setTaskGroups(updatedGroups);
     setShowDatePicker(false);
   };
 
   // Función para actualizar la fecha de una tarea
   const updateTaskDate = (groupId, taskId, newDate) => {
-    const newGroups = updateTaskDateService(taskGroups, groupId, taskId, newDate);
+    const newGroups = updateTaskDateService(
+      taskGroups,
+      groupId,
+      taskId,
+      newDate
+    );
     setTaskGroups(newGroups);
   };
 
@@ -277,7 +297,9 @@ export default function TaskTrackingApp() {
     const text = shareDataService(taskGroups, userName, summary, tagResumen);
 
     copyClipboard(text, () => {
-      if (!isMobile()) alert("¡Copiado con éxito!");
+      if (!isMobile()) {
+        alert("¡Copiado con éxito!");
+      }
       clearAllData();
     });
     if (isMobile() && navigator.share) {
@@ -301,7 +323,13 @@ export default function TaskTrackingApp() {
 
   // Actualizar tarea
   const updateTask = (groupId, taskId, field, value) => {
-    const updatedGroups = updateTaskService(taskGroups, groupId, taskId, field, value);
+    const updatedGroups = updateTaskService(
+      taskGroups,
+      groupId,
+      taskId,
+      field,
+      value
+    );
     setTaskGroups(updatedGroups);
   };
 
@@ -326,8 +354,9 @@ export default function TaskTrackingApp() {
       <div className="action-buttons">
         <FileUploader
           onFileLoaded={({ data, userNameF, error }) => {
-            if (error)
+            if (error) {
               return alert("Error al cargar archivo: " + error.message);
+            }
             if (userName === userNameF) {
               setTaskGroups(data);
               setSummary(calculateSummaryService(data));
@@ -388,29 +417,20 @@ export default function TaskTrackingApp() {
   };
 
   // Mostrar módulo de bienvenida específico según el rol del usuario
-  if (currentView === 'welcome' && isLoggedIn) {
+  if (currentView === "welcome" && isLoggedIn) {
     const renderWelcomeModule = () => {
       switch (userRole) {
         case USER_ROLES.FINANZAS:
           return (
-            <FinanceWelcome
-              userName={userName}
-              onNavigate={handleNavigate}
-            />
+            <FinanceWelcome userName={userName} onNavigate={handleNavigate} />
           );
         case USER_ROLES.TECNICO:
           return (
-            <TechnicalWelcome
-              userName={userName}
-              onNavigate={handleNavigate}
-            />
+            <TechnicalWelcome userName={userName} onNavigate={handleNavigate} />
           );
         case USER_ROLES.OPERARIO:
           return (
-            <OperatorWelcome
-              userName={userName}
-              onNavigate={handleNavigate}
-            />
+            <OperatorWelcome userName={userName} onNavigate={handleNavigate} />
           );
         case USER_ROLES.DESARROLLO:
           return (
@@ -420,17 +440,10 @@ export default function TaskTrackingApp() {
             />
           );
         case USER_ROLES.ADMIN:
-          return (
-            <WelcomeModule
-              onNavigate={handleNavigate}
-            />
-          );
+          return <WelcomeModule onNavigate={handleNavigate} />;
         default:
           return (
-            <OperatorWelcome
-              userName={userName}
-              onNavigate={handleNavigate}
-            />
+            <OperatorWelcome userName={userName} onNavigate={handleNavigate} />
           );
       }
     };
@@ -507,11 +520,11 @@ export default function TaskTrackingApp() {
           <h1 className="app-title">
             <span
               className="app-title app-title-red"
-              onClick={() => setCurrentView('welcome')}
+              onClick={() => setCurrentView("welcome")}
               role="button"
               tabIndex={0}
               title="Volver al inicio"
-              style={{ cursor: 'pointer' }}
+              style={{ cursor: "pointer" }}
             >
               JLC
             </span>{" "}
@@ -565,7 +578,9 @@ export default function TaskTrackingApp() {
 
                     <tbody>
                       {taskGroups.map((group) => {
-                        if (hiddenGroups.includes(group.id)) return null;
+                        if (hiddenGroups.includes(group.id)) {
+                          return null;
+                        }
 
                         const totalHours = group.tasks.reduce(
                           (sum, task) => sum + (parseFloat(task.hours) || 0),
@@ -812,7 +827,7 @@ TODO: Implementar navegación con Enter en el grupo
           )}
         </button>
         <button
-          onClick={() => setCurrentView('welcome')}
+          onClick={() => setCurrentView("welcome")}
           className="button button-gray"
           title="Alt + H para volver al inicio"
           onKeyDown={(e) => {

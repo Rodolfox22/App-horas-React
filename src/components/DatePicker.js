@@ -61,13 +61,11 @@ const DatePicker = ({
 
   useEffect(() => {
     // Crear una lista de sectores existentes
-     const storedSectors = JSON.parse(
-          localStorage.getItem("jlcSectors") || "[]"
-        );
-        const mergedSectors = Array.from(
-          new Set([...sectors, ...storedSectors])
-        );    
-        setExistingSectors(mergedSectors);
+    const storedSectors = JSON.parse(
+      localStorage.getItem("jlcSectors") || "[]"
+    );
+    const mergedSectors = Array.from(new Set([...sectors, ...storedSectors]));
+    setExistingSectors(mergedSectors);
   }, []);
 
   // Combina los textos y llama a addNewTask
@@ -78,7 +76,7 @@ const DatePicker = ({
       newTaskNotification ? ". Notificación: " + newTaskNotification : ""
     }${newTaskMaterials ? ". Materiales: " + newTaskMaterials : ""}`;
 
-    console.log("Creando descripcion");
+    console.log("Creando descripción");
 
     setNewTaskDescription(descripcionCompleta);
     setShouldAddTask(true);
@@ -115,7 +113,9 @@ const DatePicker = ({
     }
   };
 
-  if (!showDatePicker) return null;
+  if (!showDatePicker) {
+    return null;
+  }
 
   return (
     <div className="date-picker">
