@@ -5,6 +5,7 @@ import { X, FileUp } from "lucide-react";
 import FileUploader from "./components/FileUploader";
 import VersionInfo from "./components/VersionInfo";
 import FileMergeComponent from "./components/FileMerge";
+import SuperUserLogin from "./components/SuperUserLogin";
 
 // Utils
 import { defaultUsers, getUserRole, USER_ROLES } from "./utils/constants";
@@ -33,13 +34,16 @@ const LazyRegistroHoras = lazy(() => import('./modules/operator-module/apps/regi
 
 export default function TaskTrackingApp() {
   // Estados de navegación
-  const [currentView, setCurrentView] = useState("login"); // 'login', 'welcome', 'tasks'
+  const [currentView, setCurrentView] = useState("login"); // 'login', 'welcome', 'tasks', 'superuser-login'
   const [userRole, setUserRole] = useState(""); // Rol del usuario actual
 
   // Estados de autenticación
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userName, setUserName] = useState("");
   const [existingUsers, setExistingUsers] = useState([]);
+
+  // Estados de superusuario
+  const [showSuperUserLogin, setShowSuperUserLogin] = useState(false);
 
   // Estados
   const [showFileMerger, setShowFileMerger] = useState(false);
@@ -99,33 +103,29 @@ export default function TaskTrackingApp() {
     const formattedName = formatUserName(userName.trim());
 
     if (formattedName) {
-      setUserName(formattedName);
-
       // Determinar el rol del usuario
       const role = getUserRole(formattedName);
+
+      // Si NO es operario, requiere autenticación segura
+      if (role !== USER_ROLES.OPERARIO) {
+        // Mostrar login de superusuario para roles no operarios
+        setShowSuperUserLogin(true);
+        return;
+      }
+
+      // Login normal para operarios
+      setUserName(formattedName);
       setUserRole(role);
 
       // Activar módulo correspondiente al rol
       setActiveModules(prev => {
         const newActive = { ...prev };
         switch (role) {
-          case USER_ROLES.FINANZAS:
-            newActive.finance = true;
-            break;
-          case USER_ROLES.TECNICO:
-            newActive.technical = true;
-            break;
           case USER_ROLES.OPERARIO:
             newActive.operator = true;
             break;
-          case USER_ROLES.DESARROLLO:
-            newActive.development = true;
-            break;
-          case USER_ROLES.ADMIN:
-            newActive.welcome = true;
-            break;
           default:
-            newActive.operator = true;
+            newActive.operator = true; // fallback
             break;
         }
         return newActive;
@@ -137,6 +137,53 @@ export default function TaskTrackingApp() {
       setIsLoggedIn(true);
       setCurrentView("welcome"); // Ir al módulo de bienvenida después del login
     }
+  };
+
+  // Función para manejar login exitoso de usuario con rol no operario
+  const handleSuperUserLoginSuccess = (userData) => {
+    setUserName(userData.userName);
+    setUserRole(userData.role);
+    setShowSuperUserLogin(false);
+
+    // Activar módulos según el rol del usuario
+    setActiveModules(prev => {
+      const newActive = { ...prev };
+      switch (userData.role) {
+        case USER_ROLES.ADMIN:
+          newActive.welcome = true;
+          newActive.finance = true;
+          newActive.technical = true;
+          newActive.operator = true;
+          newActive.development = true;
+          newActive.tasks = true;
+          break;
+        case USER_ROLES.FINANZAS:
+          newActive.finance = true;
+          newActive.tasks = true;
+          break;
+        case USER_ROLES.TECNICO:
+          newActive.technical = true;
+          newActive.tasks = true;
+          break;
+        case USER_ROLES.DESARROLLO:
+          newActive.development = true;
+          newActive.tasks = true;
+          break;
+        default:
+          newActive.tasks = true; // fallback
+          break;
+      }
+      return newActive;
+    });
+
+    setIsLoggedIn(true);
+    setCurrentView("welcome");
+  };
+
+  // Función para cancelar login de superusuario
+  const handleSuperUserLoginCancel = () => {
+    setShowSuperUserLogin(false);
+    setUserName("");
   };
 
   // Función para cerrar sesión
@@ -200,6 +247,16 @@ export default function TaskTrackingApp() {
     } else {
       return <div>Módulo no disponible o no activado</div>;
     }
+  }
+
+  // Vista de login de superusuario
+  if (showSuperUserLogin) {
+    return (
+      <SuperUserLogin
+        onLoginSuccess={handleSuperUserLoginSuccess}
+        onCancel={handleSuperUserLoginCancel}
+      />
+    );
   }
 
   // Vista de login
