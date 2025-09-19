@@ -16,7 +16,7 @@ const DatePicker = ({
   setNewTaskFinished,
   addNewTask,
 }) => {
-  // Estados para generar descripcion
+  // Estados para generar descripción
   const [newTaskSector, setNewTaskSector] = useState("");
   const [newTaskPartialDescription, setNewTaskPartialDescription] =
     useState("");
@@ -28,7 +28,7 @@ const DatePicker = ({
   const [shouldAddTask, setShouldAddTask] = useState(false);
 
   // Lista de sectores predefinidos
-    const [existingSectors, setExistingSectors] = useState([]);
+  const [existingSectors, setExistingSectors] = useState([]);
 
   // Referencias para los inputs
   const dateInputRef = useRef(null);
@@ -93,7 +93,7 @@ const DatePicker = ({
       description: checkboxInputRef,
       checkbox: requestJobInputRef,
       requestJob: notificationInputRef,
-      notificacion: materialInputRef,
+      notification: materialInputRef,
       materials: addButtonRef,
       addButton: handleAddTask,
     },
@@ -204,7 +204,7 @@ const DatePicker = ({
           value={newTaskNotification}
           onChange={(e) => setNewTaskNotification(e.target.value)}
           onFocus={handleInputFocus}
-          onKeyDown={(e) => handleKeyDown(e, "notificacion")}
+          onKeyDown={(e) => handleKeyDown(e, "notification")}
           placeholder="Número de notificación (opcional)"
         />
       </div>

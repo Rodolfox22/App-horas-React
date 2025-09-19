@@ -9,6 +9,7 @@ import {
   EyeOff,
   CalendarRange,
   CalendarCheck,
+  Home,
 } from "lucide-react";
 
 // Componentes
@@ -20,6 +21,11 @@ import {
 } from "./components/GroupVisibilityManager";
 import VersionInfo from "./components/VersionInfo";
 import FileMergeComponent from "./components/FileMerge";
+import WelcomeModule from "./components/WelcomeModule";
+import FinanceWelcome from "./components/FinanceWelcome";
+import TechnicalWelcome from "./components/TechnicalWelcome";
+import OperatorWelcome from "./components/OperatorWelcome";
+import DevelopmentWelcome from "./components/DevelopmentWelcome";
 
 // Utils
 import {
@@ -27,14 +33,35 @@ import {
   normalizeToDDMMYYYY,
   getCurrentDate,
 } from "./utils/DateFormat";
-import { taskDataKey, getUsersKey, defaultUsers } from "./utils/constants";
+import { defaultUsers, getUserRole, USER_ROLES } from "./utils/constants";
 import { copyClipboard } from "./utils/CopyClipboard";
 import { SelectContentEditable } from "./utils/DomUtils";
 import { useKeyboardNavigation } from "./utils/KeyboardNavigation";
 
+// Services
+import {
+  getUserTasks,
+  saveUserTasks,
+  clearUserTasks,
+  getUsers,
+  addUser,
+  calculateSummary as calculateSummaryService,
+  addTask,
+  updateTask as updateTaskService,
+  deleteTask as deleteTaskService,
+  updateTaskDate as updateTaskDateService,
+  addTaskToGroup as addTaskToGroupService,
+  exportToJson,
+  shareData as shareDataService,
+} from "./services/taskService";
+
 import "./App.css";
 
 export default function TaskTrackingApp() {
+  // Estados de navegación
+  const [currentView, setCurrentView] = useState('login'); // 'login', 'welcome', 'tasks'
+  const [userRole, setUserRole] = useState(''); // Rol del usuario actual
+
   // Estados de autenticación
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userName, setUserName] = useState("");
@@ -83,7 +110,7 @@ export default function TaskTrackingApp() {
 
   // Cargar usuarios existentes al iniciar
   useEffect(() => {
-    const storedUsers = JSON.parse(localStorage.getItem(getUsersKey()) || "[]");
+    const storedUsers = getUsers();
     const mergedUsers = Array.from(new Set([...defaultUsers, ...storedUsers]));
     setExistingUsers(mergedUsers);
   }, []);
@@ -91,27 +118,20 @@ export default function TaskTrackingApp() {
   // Cargar datos del usuario cuando cambia
   useEffect(() => {
     if (isLoggedIn && userName) {
-      const userData = localStorage.getItem(taskDataKey(userName));
-      if (userData) {
-        try {
-          const parsedData = JSON.parse(userData);
-          setTaskGroups(parsedData);
-          calculateSummary(parsedData);
-        } catch (e) {
-          console.error("Error parsing saved data:", e);
-        }
-      } else {
-        setTaskGroups([]);
-        setSummary([]);
-      }
+      const parsedData = getUserTasks(userName);
+      setTaskGroups(parsedData);
+      setSummary(calculateSummaryService(parsedData));
+    } else {
+      setTaskGroups([]);
+      setSummary([]);
     }
   }, [isLoggedIn, userName]);
 
   // Guardar datos cuando cambian
   useEffect(() => {
     if (isLoggedIn && userName && taskGroups.length > 0) {
-      localStorage.setItem(taskDataKey(userName), JSON.stringify(taskGroups));
-      calculateSummary(taskGroups);
+      saveUserTasks(userName, taskGroups);
+      setSummary(calculateSummaryService(taskGroups));
     }
   }, [taskGroups, isLoggedIn, userName]);
 
@@ -135,7 +155,10 @@ export default function TaskTrackingApp() {
         shareData();
       },
       s: (e) => {
-        exportToJson();
+        exportToJsonLocal();
+      },
+      h: (e) => {
+        setCurrentView('welcome');
       },
     },
   });
@@ -159,6 +182,14 @@ export default function TaskTrackingApp() {
     return firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase();
   };
 
+  // Función para manejar navegación desde el módulo de bienvenida
+  const handleNavigate = (view) => {
+    if (view === 'tasks' || view === 'work-orders' || view === 'system-status') {
+      setCurrentView('tasks');
+    }
+    // Aquí se pueden agregar más vistas en el futuro
+  };
+
   // Función para manejar el login
   const handleLogin = (e) => {
     e.preventDefault();
@@ -167,14 +198,15 @@ export default function TaskTrackingApp() {
     if (formattedName) {
       setUserName(formattedName);
 
+      // Determinar el rol del usuario
+      const role = getUserRole(formattedName);
+      setUserRole(role);
+
       // Actualizar lista de usuarios si es nuevo
-      const users = JSON.parse(localStorage.getItem(getUsersKey()) || "[]");
-      if (!users.includes(formattedName)) {
-        const updatedUsers = [...users, formattedName];
-        localStorage.setItem(getUsersKey(), JSON.stringify(updatedUsers));
-      }
+      addUser(formattedName);
 
       setIsLoggedIn(true);
+      setCurrentView('welcome'); // Ir al módulo de bienvenida después del login
     }
   };
 
@@ -182,133 +214,29 @@ export default function TaskTrackingApp() {
   const handleLogout = () => {
     setIsLoggedIn(false);
     setUserName("");
+    setUserRole("");
+    setCurrentView('login');
   };
 
   // Función para agregar una tarea a un grupo
   const addTaskToGroup = (groupId) => {
-    const updatedGroups = taskGroups.map((group) => {
-      if (group.id === groupId) {
-        return {
-          ...group,
-          tasks: [
-            ...group.tasks,
-            {
-              id: Date.now().toString(),
-              hours: group.time,
-              description: group.description,
-              date: group.date,
-            },
-          ],
-        };
-      }
-      return group;
-    });
-
-    setTaskGroups(updatedGroups);
+    const group = taskGroups.find(g => g.id === groupId);
+    if (group) {
+      const updatedGroups = addTaskToGroupService(taskGroups, groupId, group.time, group.description, group.date);
+      setTaskGroups(updatedGroups);
+    }
   };
 
-  // Función para calcular el resumen de horas por fecha
-  const calculateSummary = (data) => {
-    const summaryData = [];
-    data.forEach((group) => {
-      const totalHours = group.tasks.reduce((sum, task) => {
-        return sum + (parseFloat(task.hours) || 0);
-      }, 0);
-
-      summaryData.push({
-        date: group.date,
-        totalHours: totalHours.toFixed(1),
-      });
-    });
-
-    setSummary(summaryData);
-  };
-
-  const createTask = (date, time, task, finished) => ({
-    id: Date.now().toString(),
-    hours: time,
-    description: task,
-    date: date,
-    finished: finished,
-  });
 
   const addNewTask = () => {
-    const { date, time, task, finished } = {
-      date: newTaskDate,
-      time: newTaskTime,
-      task: newTaskDescription,
-      finished: newTaskFinished,
-    };
-
-    const existingGroup = taskGroups.find((group) => group.date === date);
-
-    if (existingGroup) {
-      const updatedGroups = taskGroups.map((group) =>
-        group.date === date
-          ? {
-              ...group,
-              tasks: [...group.tasks, createTask(date, time, task, finished)],
-            }
-          : group
-      );
-      setTaskGroups(updatedGroups);
-    } else {
-      const newGroup = {
-        id: `group-${date}-${Date.now()}`,
-        date: date,
-        tasks: [createTask(date, time, task, finished)],
-      };
-      setTaskGroups(
-        [...taskGroups, newGroup].sort(
-          (a, b) => new Date(a.date) - new Date(b.date)
-        )
-      );
-    }
-
+    const updatedGroups = addTask(taskGroups, newTaskDate, newTaskTime, newTaskDescription, newTaskFinished);
+    setTaskGroups(updatedGroups);
     setShowDatePicker(false);
   };
 
   // Función para actualizar la fecha de una tarea
   const updateTaskDate = (groupId, taskId, newDate) => {
-    let allTasks = [];
-    let taskToUpdate = null;
-
-    // Extraer todas las tareas y encontrar la que se va a actualizar
-    taskGroups.forEach((group) => {
-      group.tasks.forEach((task) => {
-        if (group.id === groupId && task.id === taskId) {
-          taskToUpdate = { ...task, date: newDate };
-        } else {
-          allTasks.push({ ...task, date: task.date || group.date });
-        }
-      });
-    });
-
-    if (taskToUpdate) {
-      allTasks.push(taskToUpdate);
-    }
-
-    // Reorganizar todas las tareas por fecha
-    const newGroups = [];
-    const groupedByDate = {};
-
-    allTasks.forEach((task) => {
-      if (!groupedByDate[task.date]) {
-        groupedByDate[task.date] = [];
-      }
-      groupedByDate[task.date].push(task);
-    });
-
-    Object.keys(groupedByDate)
-      .sort()
-      .forEach((date) => {
-        newGroups.push({
-          id: `group-${date}-${Date.now()}`,
-          date: date,
-          tasks: groupedByDate[date],
-        });
-      });
-
+    const newGroups = updateTaskDateService(taskGroups, groupId, taskId, newDate);
     setTaskGroups(newGroups);
   };
 
@@ -317,7 +245,7 @@ export default function TaskTrackingApp() {
     if (window.confirm("¿Está seguro de que desea eliminar todos los datos?")) {
       setTaskGroups([]);
       setSummary([]);
-      localStorage.removeItem(taskDataKey(userName));
+      clearUserTasks(userName);
     }
   };
 
@@ -346,31 +274,7 @@ export default function TaskTrackingApp() {
 
   // Función para compartir datos
   const shareData = () => {
-    let text = "";
-
-    taskGroups.forEach((group) => {
-      group.tasks.forEach((task) => {
-        let finishedText = "";
-        if (task.finished === true) {
-          finishedText = ". Completo.";
-        }
-        //Noralizar horas, si contiene un punto, cambiarlo por coma
-        if (task.hours) {
-          task.hours = task.hours.replace(".", ",");
-        }
-        if (task.hours || task.description) {
-          text += `${normalizeShortDate(group.date)}\t${task.hours}\t${
-            task.description
-          }${finishedText}\t${userName}\n`;
-        }
-      });
-    });
-    text += tagResumen;
-    summary.forEach((item) => {
-      if (item.totalHours > 0) {
-        text += `${normalizeShortDate(item.date)}: ${item.totalHours} hs.\n`;
-      }
-    });
+    const text = shareDataService(taskGroups, userName, summary, tagResumen);
 
     copyClipboard(text, () => {
       if (!isMobile()) alert("¡Copiado con éxito!");
@@ -382,8 +286,8 @@ export default function TaskTrackingApp() {
   };
 
   // Función para exportar datos a JSON y descargar
-  const exportToJson = () => {
-    const dataStr = JSON.stringify(taskGroups, null, 2);
+  const exportToJsonLocal = () => {
+    const dataStr = exportToJson(taskGroups);
     const dataUri =
       "data:application/json;charset=utf-8," + encodeURIComponent(dataStr);
     const date = getCurrentDate();
@@ -397,36 +301,13 @@ export default function TaskTrackingApp() {
 
   // Actualizar tarea
   const updateTask = (groupId, taskId, field, value) => {
-    const updatedGroups = taskGroups.map((group) => {
-      if (group.id === groupId) {
-        const updatedTasks = group.tasks.map((task) => {
-          if (task.id === taskId) {
-            return { ...task, [field]: value };
-          }
-          return task;
-        });
-        return { ...group, tasks: updatedTasks };
-      }
-      return group;
-    });
-
+    const updatedGroups = updateTaskService(taskGroups, groupId, taskId, field, value);
     setTaskGroups(updatedGroups);
   };
 
   // Eliminar tarea
   const deleteTask = (groupId, taskId) => {
-    const updatedGroups = taskGroups
-      .map((group) => {
-        if (group.id === groupId) {
-          return {
-            ...group,
-            tasks: group.tasks.filter((task) => task.id !== taskId),
-          };
-        }
-        return group;
-      })
-      .filter((group) => group.tasks.length > 0);
-
+    const updatedGroups = deleteTaskService(taskGroups, groupId, taskId);
     setTaskGroups(updatedGroups);
   };
 
@@ -435,7 +316,7 @@ export default function TaskTrackingApp() {
     <div className="task-header">
       {/* Título arriba */}
       <h2 className="task-title">
-        {/*TODO: agregar boton para ingresar datos pegados
+        {/*TODO: agregar botón para ingresar datos pegados
           onClick={() => }
         role="button"*/}
         Registro de Tareas
@@ -449,9 +330,9 @@ export default function TaskTrackingApp() {
               return alert("Error al cargar archivo: " + error.message);
             if (userName === userNameF) {
               setTaskGroups(data);
-              calculateSummary(data);
+              setSummary(calculateSummaryService(data));
             }
-            localStorage.setItem(taskDataKey(userNameF), JSON.stringify(data));
+            saveUserTasks(userNameF, data);
             alert(`Archivo cargado con éxito para el usuario: ${userNameF}`);
             setShowTaskHeader(false);
           }}
@@ -464,7 +345,7 @@ export default function TaskTrackingApp() {
         <button
           onClick={() => {
             setShowTaskHeader(false);
-            setTimeout(exportToJson, 300);
+            setTimeout(exportToJsonLocal, 300);
           }}
           className="button button-gray"
         >
@@ -505,6 +386,57 @@ export default function TaskTrackingApp() {
       </div>
     );
   };
+
+  // Mostrar módulo de bienvenida específico según el rol del usuario
+  if (currentView === 'welcome' && isLoggedIn) {
+    const renderWelcomeModule = () => {
+      switch (userRole) {
+        case USER_ROLES.FINANZAS:
+          return (
+            <FinanceWelcome
+              userName={userName}
+              onNavigate={handleNavigate}
+            />
+          );
+        case USER_ROLES.TECNICO:
+          return (
+            <TechnicalWelcome
+              userName={userName}
+              onNavigate={handleNavigate}
+            />
+          );
+        case USER_ROLES.OPERARIO:
+          return (
+            <OperatorWelcome
+              userName={userName}
+              onNavigate={handleNavigate}
+            />
+          );
+        case USER_ROLES.DESARROLLO:
+          return (
+            <DevelopmentWelcome
+              userName={userName}
+              onNavigate={handleNavigate}
+            />
+          );
+        case USER_ROLES.ADMIN:
+          return (
+            <WelcomeModule
+              onNavigate={handleNavigate}
+            />
+          );
+        default:
+          return (
+            <OperatorWelcome
+              userName={userName}
+              onNavigate={handleNavigate}
+            />
+          );
+      }
+    };
+
+    return renderWelcomeModule();
+  }
 
   // Vista de login
   if (!isLoggedIn) {
@@ -575,9 +507,11 @@ export default function TaskTrackingApp() {
           <h1 className="app-title">
             <span
               className="app-title app-title-red"
-              onClick={() => setShowTaskHeader(true)}
+              onClick={() => setCurrentView('welcome')}
               role="button"
               tabIndex={0}
+              title="Volver al inicio"
+              style={{ cursor: 'pointer' }}
             >
               JLC
             </span>{" "}
@@ -796,7 +730,7 @@ TODO: Implementar navegación con Enter en el grupo
                         <div
                           key={index}
                           className={`summary-item ${
-                            item.totalHours == 9 ? "white-bg" : ""
+                            item.totalHours === 9 ? "white-bg" : ""
                           }`}
                         >
                           {normalizeShortDate(item.date)}: {item.totalHours} hs.
@@ -836,7 +770,8 @@ TODO: Implementar navegación con Enter en el grupo
             handleKeyDown(e, "newButton");
           }}
         >
-          <Plus size={18} className="mr-1" /> <u>N</u>uevo
+          <Plus size={18} />
+          &nbsp;<u>N</u>uevo
         </button>
         <button
           ref={clearInputRef}
@@ -847,7 +782,8 @@ TODO: Implementar navegación con Enter en el grupo
           }}
           className="button button-red"
         >
-          <Trash2 size={18} className="mr-1" /> <u>L</u>impiar
+          <Trash2 size={18} />
+          &nbsp;<u>L</u>impiar
         </button>
         <button
           ref={hideInputRef}
@@ -866,14 +802,25 @@ TODO: Implementar navegación con Enter en el grupo
           {hiddenGroups.length ? (
             <span>
               {" "}
-              M<u>o</u>strar todos
+              &nbsp;M<u>o</u>strar todos
             </span>
           ) : (
             <span>
               {" "}
-              <u>O</u>cultar completos
+              &nbsp;<u>O</u>cultar completos
             </span>
           )}
+        </button>
+        <button
+          onClick={() => setCurrentView('welcome')}
+          className="button button-gray"
+          title="Alt + H para volver al inicio"
+          onKeyDown={(e) => {
+            handleKeyDown(e, "home");
+          }}
+        >
+          <Home size={18} />
+          &nbsp;<u>H</u>ome
         </button>
         <button
           ref={shareInputRef}
@@ -884,7 +831,8 @@ TODO: Implementar navegación con Enter en el grupo
             handleKeyDown(e, "share");
           }}
         >
-          <Share2 size={18} className="mr-1" /> <u>C</u>ompartir
+          <Share2 size={18} />
+          &nbsp;<u>C</u>ompartir
         </button>
       </div>
 
