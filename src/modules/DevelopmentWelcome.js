@@ -11,7 +11,7 @@ import {
   MessageSquare,
   MapPin,
 } from "lucide-react";
-import VersionInfo from "./VersionInfo";
+import VersionInfo from "../components/VersionInfo";
 
 const DevelopmentWelcome = ({
   userName,

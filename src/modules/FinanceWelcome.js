@@ -14,7 +14,7 @@ import {
   CheckCircle,
   Target
 } from 'lucide-react';
-import VersionInfo from './VersionInfo';
+import VersionInfo from '../components/VersionInfo';
 
 const FinanceWelcome = ({ userName, onNavigate }) => {
   const financeTools = [

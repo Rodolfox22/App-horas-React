@@ -11,7 +11,7 @@ import {
   Users,
   Target
 } from 'lucide-react';
-import VersionInfo from './VersionInfo';
+import VersionInfo from '../components/VersionInfo';
 
 const OperatorWelcome = ({ userName, onNavigate }) => {
   const operatorTools = [

@@ -9,7 +9,7 @@ import {
   ClipboardList,
   BarChart3
 } from 'lucide-react';
-import VersionInfo from './VersionInfo';
+import VersionInfo from '../components/VersionInfo';
 
 const WelcomeModule = ({ onNavigate }) => {
   const tools = [
