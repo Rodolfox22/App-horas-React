@@ -374,6 +374,7 @@ export default function TaskTrackingApp() {
 
     copyClipboard(text, () => {
       if (!isMobile()) alert("¡Copiado con éxito!");
+      clearAllData();
     });
     if (isMobile() && navigator.share) {
       return shareMobileData(text);
@@ -433,7 +434,12 @@ export default function TaskTrackingApp() {
   const TaskHeaderContent = () => (
     <div className="task-header">
       {/* Título arriba */}
-      <h2 className="task-title">Registro de Tareas</h2>
+      <h2 className="task-title">
+        {/*TODO: agregar boton para ingresar datos pegados
+          onClick={() => }
+        role="button"*/}
+        Registro de Tareas
+      </h2>
 
       {/* Botones centrados */}
       <div className="action-buttons">
